@@ -1,0 +1,30 @@
+[project]
+name = "cii-assistant-backend"
+version = "0.1.0"
+description = "Agentic AI assistant for CII docs (docs.oort.io)"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "httpx>=0.27",
+    "beautifulsoup4>=4.12",
+    "markdownify>=0.13",
+    "lxml>=5.2",
+    "chromadb>=0.5",
+    "anthropic>=0.92",
+    "voyageai>=0.3",
+    "rank-bm25>=0.2.2",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "python-dotenv>=1.0",
+    "sse-starlette>=2.1",
+    "tenacity>=8.5",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
