@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")
-    voyage_api_key: str = Field(default="", alias="VOYAGE_API_KEY")
+    anthropic_base_url: str = Field(default="https://api.anthropic.com", alias="ANTHROPIC_BASE_URL")
 
     docs_base_url: str = Field(default="https://docs.oort.io", alias="DOCS_BASE_URL")
     chroma_path: str = Field(default="./data/chroma", alias="CHROMA_PATH")
@@ -20,11 +20,10 @@ class Settings(BaseSettings):
     crawl_rate_per_sec: float = Field(default=1.0, alias="CRAWL_RATE_PER_SEC")
     user_agent: str = Field(default="CII-Assistant-Indexer/0.1", alias="USER_AGENT")
 
-    embed_model: str = Field(default="voyage-3", alias="EMBED_MODEL")
-    embed_batch_size: int = Field(default=128, alias="EMBED_BATCH_SIZE")
+    embed_batch_size: int = Field(default=64, alias="EMBED_BATCH_SIZE")
 
-    reasoning_model: str = Field(default="claude-opus-4-7", alias="REASONING_MODEL")
-    light_model: str = Field(default="claude-haiku-4-5", alias="LIGHT_MODEL")
+    reasoning_model: str = Field(default="claude-opus-4.7", alias="REASONING_MODEL")
+    light_model: str = Field(default="claude-haiku-4.5", alias="LIGHT_MODEL")
 
     cors_origins: str = Field(default="http://localhost:5173", alias="CORS_ORIGINS")
 

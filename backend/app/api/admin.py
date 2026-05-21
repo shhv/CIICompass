@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 from ..ingest.pipeline import run_full_pipeline
 from ..rag.store import ChromaStore
+from ..agent import cache as qa_cache
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ async def _run_job(force: bool) -> None:
     try:
         _state.status = "running"
         result = await run_full_pipeline(force=force)
+        await qa_cache.clear()
         _state.result = result
         _state.status = "done"
     except Exception as e:
@@ -81,6 +83,7 @@ async def status() -> dict[str, Any]:
         "collection_size": store.count(),
         "pages": len(urls),
         "chunks_by_category": dict(by_cat),
+        "qa_cache_size": await qa_cache.size(),
         "job": {
             "id": _state.job_id,
             "status": _state.status,
@@ -90,3 +93,8 @@ async def status() -> dict[str, Any]:
             "error": _state.error,
         },
     }
+
+
+@router.post("/cache/clear")
+async def clear_cache() -> dict[str, int]:
+    return {"cleared": await qa_cache.clear()}

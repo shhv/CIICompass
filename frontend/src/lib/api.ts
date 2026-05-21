@@ -1,3 +1,5 @@
+const API_BASE = (import.meta as any).env?.VITE_API_BASE ?? "http://localhost:8000";
+
 export type AgentEvent =
   | { type: "text"; delta: string }
   | { type: "tool_use"; name: string; input: any }
@@ -13,7 +15,7 @@ export async function streamChat(
   onEvent: (evt: AgentEvent) => void,
   signal?: AbortSignal
 ): Promise<void> {
-  const res = await fetch("/api/chat", {
+  const res = await fetch(`${API_BASE}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
     body: JSON.stringify({ messages }),
@@ -29,7 +31,7 @@ export async function streamChat(
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    buf += decoder.decode(value, { stream: true });
+    buf += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
 
     let idx: number;
     while ((idx = buf.indexOf("\n\n")) !== -1) {
@@ -52,12 +54,12 @@ export async function streamChat(
 }
 
 export async function getStatus(): Promise<any> {
-  const r = await fetch("/api/status");
+  const r = await fetch(`${API_BASE}/api/status`);
   return r.json();
 }
 
 export async function startIngest(force = false): Promise<any> {
-  const r = await fetch("/api/ingest", {
+  const r = await fetch(`${API_BASE}/api/ingest`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ force }),

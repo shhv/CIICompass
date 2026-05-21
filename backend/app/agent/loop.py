@@ -47,7 +47,10 @@ async def run_agent(
       {"type": "error", "message": "..."}
     """
     settings = get_settings()
-    client = AsyncAnthropic(api_key=settings.anthropic_api_key)
+    client = AsyncAnthropic(
+        api_key=settings.anthropic_api_key,
+        base_url=settings.anthropic_base_url,
+    )
     executor = ToolExecutor()
     convo: list[dict[str, Any]] = list(messages)
     cited_urls: set[str] = set()

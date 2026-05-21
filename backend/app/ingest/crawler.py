@@ -172,13 +172,15 @@ def _extract_main(html: str) -> tuple[str, list[str], str | None, str]:
     if time_el:
         last_updated = time_el.get("datetime") or time_el.get_text(strip=True)
 
-    for sel in ["nav", "footer", "script", "style", "header", "aside", "noscript"]:
+    for sel in ["script", "style", "noscript"]:
         for el in soup.find_all(sel):
             el.decompose()
-    for el in soup.find_all(attrs={"class": re.compile(r"(nav|footer|sidebar|menu|toc)", re.I)}):
-        el.decompose()
 
     main = soup.find("main") or soup.find("article") or soup.body or soup
+    # Strip layout chrome only WITHIN main
+    for sel in ["nav", "footer", "header", "aside"]:
+        for el in main.find_all(sel):
+            el.decompose()
     markdown_text = md(str(main), heading_style="ATX")
     markdown_text = re.sub(r"\n{3,}", "\n\n", markdown_text).strip()
     return title, breadcrumb, last_updated, markdown_text

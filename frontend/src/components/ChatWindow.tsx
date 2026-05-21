@@ -71,13 +71,15 @@ export function ChatWindow() {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto px-4">
-        <div className="max-w-4xl mx-auto py-4">
+    <div className="flex flex-col h-full bg-slate-50">
+      <div className="flex-1 overflow-y-auto px-6">
+        <div className="max-w-4xl mx-auto py-6">
           {messages.length === 0 && (
-            <div className="text-center text-slate-400 mt-12">
-              <div className="text-2xl font-semibold mb-2 text-slate-200">CII Assistant</div>
-              <div>Ask anything about the CII platform — config, APIs, releases, troubleshooting.</div>
+            <div className="text-center text-slate-500 mt-16">
+              <div className="text-3xl font-semibold mb-3 text-slate-800">CII Assistant</div>
+              <div className="text-base">
+                Ask anything about the CII platform — config, APIs, releases, troubleshooting.
+              </div>
             </div>
           )}
           {messages.map((m, i) => (

@@ -4,6 +4,7 @@ backend/.venv/
 backend/data/chroma/
 backend/data/raw/
 backend/data/url_hashes.json
+backend/data/qa_cache.json
 backend/**/__pycache__/
 backend/*.egg-info/
 

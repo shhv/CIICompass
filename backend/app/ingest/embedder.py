@@ -1,37 +1,48 @@
 from __future__ import annotations
 
 import logging
-from typing import Literal
+from functools import lru_cache
 
-import voyageai
-from tenacity import retry, stop_after_attempt, wait_exponential
+from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
 
 from ..config import get_settings
 
 logger = logging.getLogger(__name__)
 
-InputType = Literal["document", "query"]
+
+@lru_cache
+def _ef() -> ONNXMiniLM_L6_V2:
+    # Downloads a small ONNX MiniLM model on first use (~80MB), runs locally on CPU.
+    return ONNXMiniLM_L6_V2(preferred_providers=["CPUExecutionProvider"])
 
 
-class VoyageEmbedder:
-    def __init__(self, model: str | None = None, batch_size: int | None = None) -> None:
+class LocalEmbedder:
+    """Local ONNX embedder (chromadb's default all-MiniLM-L6-v2, 384-dim).
+
+    No API key required. Compatible with both document and query embeddings —
+    MiniLM is symmetric, so input_type is ignored.
+    """
+
+    def __init__(self, batch_size: int | None = None) -> None:
         settings = get_settings()
-        self.model = model or settings.embed_model
         self.batch_size = batch_size or settings.embed_batch_size
-        self.client = voyageai.Client(api_key=settings.voyage_api_key or None)
-
-    @retry(stop=stop_after_attempt(4), wait=wait_exponential(min=1, max=20))
-    def _embed_batch(self, texts: list[str], input_type: InputType) -> list[list[float]]:
-        result = self.client.embed(texts=texts, model=self.model, input_type=input_type)
-        return result.embeddings
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        ef = _ef()
         out: list[list[float]] = []
         for i in range(0, len(texts), self.batch_size):
             batch = texts[i : i + self.batch_size]
-            logger.info("embedding batch %d/%d", i // self.batch_size + 1, (len(texts) + self.batch_size - 1) // self.batch_size)
-            out.extend(self._embed_batch(batch, "document"))
+            logger.info(
+                "embedding batch %d/%d",
+                i // self.batch_size + 1,
+                (len(texts) + self.batch_size - 1) // self.batch_size,
+            )
+            out.extend(ef(batch))
         return out
 
     def embed_query(self, text: str) -> list[float]:
-        return self._embed_batch([text], "query")[0]
+        return _ef()([text])[0]
+
+
+# Back-compat alias so existing imports keep working
+VoyageEmbedder = LocalEmbedder
