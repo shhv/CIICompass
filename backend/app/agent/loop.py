@@ -8,6 +8,7 @@ from anthropic import AsyncAnthropic
 
 from ..config import get_settings
 from .prompts import SYSTEM_PROMPT
+from .router import choose_model
 from .tools import TOOLS, ToolExecutor
 
 logger = logging.getLogger(__name__)
@@ -55,10 +56,24 @@ async def run_agent(
     convo: list[dict[str, Any]] = list(messages)
     cited_urls: set[str] = set()
 
+    model, route_reason = choose_model(messages, settings)
+    escalated = False
+    yield {"type": "model", "name": model, "reason": route_reason}
+
     for iteration in range(MAX_ITERATIONS):
+        # Escalate to the heavy model if a light-routed turn is still doing tool work.
+        if (
+            not escalated
+            and model == settings.light_model
+            and iteration >= settings.escalate_after_iter
+        ):
+            model = settings.reasoning_model
+            escalated = True
+            yield {"type": "model", "name": model, "reason": "escalated"}
+
         try:
             stream_ctx = client.messages.stream(
-                model=settings.reasoning_model,
+                model=model,
                 max_tokens=MAX_TOKENS,
                 system=_cached_system(),
                 tools=_cached_tools(),

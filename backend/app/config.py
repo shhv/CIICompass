@@ -24,6 +24,10 @@ class Settings(BaseSettings):
 
     reasoning_model: str = Field(default="claude-opus-4.7", alias="REASONING_MODEL")
     light_model: str = Field(default="claude-haiku-4.5", alias="LIGHT_MODEL")
+    # heuristic | always_opus | always_haiku
+    router_mode: str = Field(default="heuristic", alias="ROUTER_MODE")
+    # If a Haiku-routed turn is still issuing tool calls after this iteration, escalate to Opus.
+    escalate_after_iter: int = Field(default=3, alias="ESCALATE_AFTER_ITER")
 
     cors_origins: str = Field(default="http://localhost:5173", alias="CORS_ORIGINS")
 
