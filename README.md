@@ -55,7 +55,8 @@ curl -N -X POST localhost:8000/api/chat \
 ```bash
 cd frontend
 npm install
-npm run dev   # http://localhost:5173, proxies /api → http://localhost:8000
+npm run dev              # http://localhost:5173, proxies /api → http://localhost:8000
+npm run dev -- --host    # bind 0.0.0.0 so other machines on the network can reach it
 ```
 
 ## Architecture notes
