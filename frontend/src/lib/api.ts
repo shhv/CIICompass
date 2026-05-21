@@ -58,6 +58,40 @@ export async function getStatus(): Promise<any> {
   return r.json();
 }
 
+export async function sendFeedback(
+  question: string,
+  answer: string,
+  vote: 1 | -1,
+  comment?: string
+): Promise<any> {
+  const r = await fetch(`${API_BASE}/api/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question, answer, vote, comment }),
+  });
+  return r.json();
+}
+
+export async function listFeedback(limit = 20, only?: "up" | "down"): Promise<any> {
+  const q = new URLSearchParams({ limit: String(limit) });
+  if (only) q.set("only", only);
+  const r = await fetch(`${API_BASE}/api/feedback/list?${q}`);
+  return r.json();
+}
+
+export async function sendContact(
+  name: string,
+  email: string,
+  message: string
+): Promise<any> {
+  const r = await fetch(`${API_BASE}/api/contact`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, message }),
+  });
+  return r.json();
+}
+
 export async function startIngest(force = false): Promise<any> {
   const r = await fetch(`${API_BASE}/api/ingest`, {
     method: "POST",

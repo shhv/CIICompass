@@ -8,11 +8,14 @@ from collections import Counter
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from ..ingest.pipeline import run_full_pipeline
 from ..rag.store import ChromaStore
 from ..agent import cache as qa_cache
+from ..agent import feedback as fb_store
+from ..agent import contact as contact_store
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +87,7 @@ async def status() -> dict[str, Any]:
         "pages": len(urls),
         "chunks_by_category": dict(by_cat),
         "qa_cache_size": await qa_cache.size(),
+        "feedback": await fb_store.stats(),
         "job": {
             "id": _state.job_id,
             "status": _state.status,
@@ -98,3 +102,68 @@ async def status() -> dict[str, Any]:
 @router.post("/cache/clear")
 async def clear_cache() -> dict[str, int]:
     return {"cleared": await qa_cache.clear()}
+
+
+class FeedbackRequest(BaseModel):
+    question: str
+    answer: str
+    vote: int  # 1 or -1
+    comment: str | None = None
+
+
+@router.post("/feedback")
+async def feedback(req: FeedbackRequest) -> dict[str, Any]:
+    row = await fb_store.record(req.question, req.answer, req.vote, req.comment)
+    return {"ok": True, "id": row["id"], "vote": row["vote"]}
+
+
+@router.get("/feedback/stats")
+async def feedback_stats() -> dict[str, int]:
+    return await fb_store.stats()
+
+
+@router.get("/feedback/list")
+async def feedback_list(limit: int = 50, only: str | None = None) -> dict[str, Any]:
+    rows = await fb_store.list_rows(limit=limit, only=only)
+    return {"rows": rows, "count": len(rows)}
+
+
+@router.get("/feedback/export", response_class=PlainTextResponse)
+async def feedback_export() -> PlainTextResponse:
+    import csv
+    import io
+
+    rows = await fb_store.list_rows(limit=10_000)
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["id", "vote", "created_at", "updated_at", "question", "answer_preview", "comment"])
+    for r in rows:
+        w.writerow([
+            r.get("id", ""),
+            r.get("vote", ""),
+            r.get("created_at", ""),
+            r.get("updated_at", ""),
+            r.get("question", ""),
+            r.get("answer_preview", ""),
+            r.get("comment", "") or "",
+        ])
+    return PlainTextResponse(
+        buf.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="feedback.csv"'},
+    )
+
+
+class ContactRequest(BaseModel):
+    name: str | None = None
+    email: str | None = None
+    message: str
+
+
+@router.post("/contact")
+async def contact(req: ContactRequest) -> dict[str, Any]:
+    try:
+        row = await contact_store.submit(req.name or "", req.email or "", req.message)
+    except ValueError as e:
+        return {"ok": False, "error": str(e)}
+    return {"ok": True, "sent": row["sent"], "error": row.get("error")}

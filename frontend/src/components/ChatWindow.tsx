@@ -90,6 +90,11 @@ export function ChatWindow() {
               citations={m.citations}
               toolCalls={m.toolCalls}
               pending={m.pending}
+              question={
+                m.role === "assistant" && i > 0 && messages[i - 1].role === "user"
+                  ? messages[i - 1].content
+                  : undefined
+              }
             />
           ))}
           <div ref={bottomRef} />

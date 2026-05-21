@@ -5,6 +5,8 @@ backend/data/chroma/
 backend/data/raw/
 backend/data/url_hashes.json
 backend/data/qa_cache.json
+backend/data/feedback.json
+backend/data/contact.json
 backend/**/__pycache__/
 backend/*.egg-info/
 
