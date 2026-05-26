@@ -57,17 +57,32 @@ async def _run_job(force: bool) -> None:
 
 @router.post("/ingest")
 async def ingest(req: IngestRequest, background_tasks: BackgroundTasks) -> dict[str, Any]:
+    started = await start_ingest(req.force, background_tasks=background_tasks)
+    if not started:
+        return {"status": "already_running", "job_id": _state.job_id}
+    return {"status": "started", "job_id": _state.job_id}
+
+
+async def start_ingest(force: bool, background_tasks: BackgroundTasks | None = None) -> bool:
+    """Kick off the ingest job. Returns False if one is already running.
+
+    If background_tasks is provided (HTTP path), the job is scheduled on it.
+    Otherwise (scheduler path) it runs as a fire-and-forget asyncio task.
+    """
     async with _lock:
         if _state.status == "running":
-            return {"status": "already_running", "job_id": _state.job_id}
+            return False
         _state.job_id = uuid.uuid4().hex
         _state.started_at = time.time()
         _state.finished_at = None
         _state.result = None
         _state.error = None
         _state.status = "running"
-    background_tasks.add_task(_run_job, req.force)
-    return {"status": "started", "job_id": _state.job_id}
+    if background_tasks is not None:
+        background_tasks.add_task(_run_job, force)
+    else:
+        asyncio.create_task(_run_job(force))
+    return True
 
 
 @router.get("/status")

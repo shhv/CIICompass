@@ -1,14 +1,27 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api.chat import router as chat_router
 from .api.admin import router as admin_router
 from .config import get_settings
+from .scheduler import start_scheduler
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    task = await start_scheduler()
+    try:
+        yield
+    finally:
+        if task is not None:
+            task.cancel()
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
-    app = FastAPI(title="CII Assistant", version="0.1.0")
+    app = FastAPI(title="CII Assistant", version="0.1.0", lifespan=lifespan)
 
     app.add_middleware(
         CORSMiddleware,

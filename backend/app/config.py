@@ -31,6 +31,11 @@ class Settings(BaseSettings):
 
     cors_origins: str = Field(default="http://localhost:5173", alias="CORS_ORIGINS")
 
+    # Daily re-index scheduler. Hour is local time, 0-23 (default 01:00, low-traffic window).
+    reindex_enabled: bool = Field(default=True, alias="REINDEX_ENABLED")
+    reindex_hour: int = Field(default=1, alias="REINDEX_HOUR")
+    reindex_on_startup: bool = Field(default=False, alias="REINDEX_ON_STARTUP")
+
     contact_email_to: str = Field(default="shhv@cisco.com", alias="CONTACT_EMAIL_TO")
     smtp_host: str = Field(default="", alias="SMTP_HOST")
     smtp_port: int = Field(default=587, alias="SMTP_PORT")

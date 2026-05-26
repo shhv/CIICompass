@@ -103,6 +103,9 @@ async def run_agent(
         tool_uses: list[dict[str, Any]] = []
         for block in final.content:
             b = block.model_dump() if hasattr(block, "model_dump") else dict(block)
+            # Strip proxy-injected fields with null values (e.g. claudegate adds
+            # `caller: null` on tool_use, then rejects null on the next request).
+            b = {k: v for k, v in b.items() if v is not None}
             assistant_blocks.append(b)
             if b.get("type") == "tool_use":
                 tool_uses.append(b)
