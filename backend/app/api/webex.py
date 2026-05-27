@@ -17,6 +17,15 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 _client: WebexClient | None = None
+_semaphore: asyncio.Semaphore | None = None
+_busy_message = "⏳ Busy answering other questions — your message is queued."
+
+
+def _get_semaphore() -> asyncio.Semaphore:
+    global _semaphore
+    if _semaphore is None:
+        _semaphore = asyncio.Semaphore(get_settings().webex_max_concurrent)
+    return _semaphore
 
 
 def _get_client() -> WebexClient:
@@ -72,25 +81,33 @@ async def _handle_message_created(payload: dict[str, Any]) -> None:
     except Exception:
         logger.exception("webex ack post failed")
 
+    sem = _get_semaphore()
+    if sem.locked():
+        try:
+            await client.post_message(room_id, _busy_message, parent_id=message_id)
+        except Exception:
+            logger.exception("webex busy-notice post failed")
+
     final_chunks: list[str] = []
     citations: list[dict[str, Any]] = []
-    try:
-        async for ev in run_agent([{"role": "user", "content": text}]):
-            t = ev.get("type")
-            if t == "text":
-                final_chunks.append(ev.get("delta", ""))
-            elif t == "tool_use":
-                # Discard any preamble text emitted before this tool call —
-                # only the text after the final tool round is the real answer.
-                final_chunks.clear()
-            elif t == "citation":
-                citations.append(ev)
-            elif t == "error":
-                final_chunks.append(f"\n\n_error: {ev.get('message','')}_")
-                break
-    except Exception as e:
-        logger.exception("webex agent run failed")
-        final_chunks.append(f"\n\n_internal error: {e}_")
+    async with sem:
+        try:
+            async for ev in run_agent([{"role": "user", "content": text}]):
+                t = ev.get("type")
+                if t == "text":
+                    final_chunks.append(ev.get("delta", ""))
+                elif t == "tool_use":
+                    # Discard preamble text emitted before this tool call;
+                    # keep only the final answer after the last tool round.
+                    final_chunks.clear()
+                elif t == "citation":
+                    citations.append(ev)
+                elif t == "error":
+                    final_chunks.append(f"\n\n_error: {ev.get('message','')}_")
+                    break
+        except Exception as e:
+            logger.exception("webex agent run failed")
+            final_chunks.append(f"\n\n_internal error: {e}_")
 
     answer = "".join(final_chunks).strip() or "_(no answer produced)_"
     if citations:

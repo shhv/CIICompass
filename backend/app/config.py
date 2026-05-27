@@ -54,6 +54,7 @@ class Settings(BaseSettings):
         default="Got it — searching the CII docs, one moment…",
         alias="WEBEX_ACK_MESSAGE",
     )
+    webex_max_concurrent: int = Field(default=8, alias="WEBEX_MAX_CONCURRENT")
 
     @property
     def cors_origin_list(self) -> list[str]:
