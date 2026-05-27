@@ -139,6 +139,44 @@ doc-grounded answer with markdown citations.
 - Webhook signatures are verified with `WEBEX_WEBHOOK_SECRET` when set.
   Leave it blank to disable verification (not recommended).
 
+## Commands to run the skills
+
+Skills are invoked by typing `/<skill-name>` directly in the Claude Code prompt.
+
+### 1. Start the dev stack
+
+```
+/run-cii-dev
+```
+
+Launches:
+- **Backend** — FastAPI on `http://localhost:8000`
+- **Frontend** — Vite on `http://localhost:5173`
+- **Cloudflare tunnel** — exposes the Webex bot endpoint
+
+Wait until all three are reported healthy before moving on.
+
+### 2. Reindex the docs
+
+```
+/reindex
+```
+
+Triggers a re-index of `docs.oort.io` against the running backend, polls progress until completion, and surfaces any failures.
+
+Use this whenever the agent answers "I have no docs" or after docs are updated.
+
+### Typical flow
+
+```
+/run-cii-dev      # boot everything
+/reindex          # populate / refresh the index
+```
+
+Notes:
+- `/reindex` requires the backend on `:8000` to be up — run `/run-cii-dev` first.
+- To stop the stack, interrupt the running skill.
+
 ## Architecture notes
 
 - **Ingestion** (`app/ingest/`): sitemap-driven crawl → `markdownify` → heading-aware chunker (~800 tokens, 100 overlap, heading path prefixed) → Voyage `voyage-3` embeddings (batches of 128) → ChromaDB collection `cii_docs`. Incremental: per-URL content hash stored in `data/url_hashes.json`; unchanged pages are skipped on re-run.
