@@ -96,7 +96,18 @@ def index_pages(pages: list[FetchedPage], force: bool = False) -> dict[str, int]
 
 
 async def run_full_pipeline(force: bool = False) -> dict[str, int]:
+    from . import progress
+    progress.reset()
+    progress.set_phase("discovering")
     pages = await crawl_all()
+    progress.set_phase("indexing")
     logger.info("crawl complete: %d pages", len(pages))
     # offload indexing (CPU + sync IO) to a thread to keep loop responsive
-    return await asyncio.to_thread(index_pages, pages, force)
+    result = await asyncio.to_thread(index_pages, pages, force)
+    progress.set_indexed(
+        pages=result.get("pages_indexed", 0),
+        skipped=result.get("pages_skipped", 0),
+        chunks=result.get("chunks_indexed", 0),
+    )
+    progress.set_phase("done")
+    return result

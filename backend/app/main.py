@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .api.chat import router as chat_router
 from .api.admin import router as admin_router
+from .api.webex import router as webex_router
 from .config import get_settings
 from .scheduler import start_scheduler
 
@@ -33,6 +34,7 @@ def create_app() -> FastAPI:
 
     app.include_router(chat_router, prefix="/api")
     app.include_router(admin_router, prefix="/api")
+    app.include_router(webex_router, prefix="/api")
 
     @app.get("/health")
     async def health() -> dict[str, str]:

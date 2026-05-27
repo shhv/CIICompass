@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     # If a Haiku-routed turn is still issuing tool calls after this iteration, escalate to Opus.
     escalate_after_iter: int = Field(default=3, alias="ESCALATE_AFTER_ITER")
 
+    # Hard cap on a single ingest run. Job is failed if it exceeds this.
+    ingest_timeout_sec: int = Field(default=1800, alias="INGEST_TIMEOUT_SEC")
+
     cors_origins: str = Field(default="http://localhost:5173", alias="CORS_ORIGINS")
 
     # Daily re-index scheduler. Hour is local time, 0-23 (default 01:00, low-traffic window).
@@ -43,6 +46,14 @@ class Settings(BaseSettings):
     smtp_password: str = Field(default="", alias="SMTP_PASSWORD")
     smtp_from: str = Field(default="", alias="SMTP_FROM")
     smtp_starttls: bool = Field(default=True, alias="SMTP_STARTTLS")
+
+    webex_bot_token: str = Field(default="", alias="WEBEX_BOT_TOKEN")
+    webex_webhook_secret: str = Field(default="", alias="WEBEX_WEBHOOK_SECRET")
+    webex_api_base: str = Field(default="https://webexapis.com/v1", alias="WEBEX_API_BASE")
+    webex_ack_message: str = Field(
+        default="Got it — searching the CII docs, one moment…",
+        alias="WEBEX_ACK_MESSAGE",
+    )
 
     @property
     def cors_origin_list(self) -> list[str]:

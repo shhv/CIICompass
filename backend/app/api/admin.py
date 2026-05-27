@@ -12,10 +12,12 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from ..ingest.pipeline import run_full_pipeline
+from ..ingest import progress as ingest_progress
 from ..rag.store import ChromaStore
 from ..agent import cache as qa_cache
 from ..agent import feedback as fb_store
 from ..agent import contact as contact_store
+from ..config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -43,12 +45,19 @@ class IngestRequest(BaseModel):
 async def _run_job(force: bool) -> None:
     try:
         _state.status = "running"
-        result = await run_full_pipeline(force=force)
+        timeout = get_settings().ingest_timeout_sec
+        result = await asyncio.wait_for(run_full_pipeline(force=force), timeout=timeout)
         await qa_cache.clear()
         _state.result = result
         _state.status = "done"
+    except asyncio.TimeoutError:
+        logger.warning("ingest exceeded %ss timeout", timeout)
+        ingest_progress.set_phase("error")
+        _state.error = f"timed out after {timeout}s"
+        _state.status = "error"
     except Exception as e:
         logger.exception("ingest failed")
+        ingest_progress.set_phase("error")
         _state.error = str(e)
         _state.status = "error"
     finally:
@@ -110,6 +119,7 @@ async def status() -> dict[str, Any]:
             "finished_at": _state.finished_at,
             "result": _state.result,
             "error": _state.error,
+            "progress": ingest_progress.get_progress().snapshot(),
         },
     }
 

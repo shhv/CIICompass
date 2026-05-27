@@ -194,11 +194,15 @@ async def fetch_page(
 ) -> FetchedPage | None:
     await limiter.wait()
     try:
-        r = await client.get(url, timeout=30.0)
+        r = await client.get(url, timeout=15.0)
     except Exception as e:
-        logger.warning("fetch %s failed: %s", url, e)
+        from . import progress as _p
+        _p.bump_failed(repr(e))
+        logger.warning("fetch %s failed: %s", url, repr(e))
         return None
     if r.status_code != 200 or "text/html" not in r.headers.get("content-type", ""):
+        from . import progress as _p
+        _p.bump_failed(f"status={r.status_code} ct={r.headers.get('content-type','')[:40]}")
         return None
 
     raw_file = raw_dir / f"{url_hash(url)}.html"
@@ -206,8 +210,12 @@ async def fetch_page(
 
     title, breadcrumb, last_updated, markdown_text = _extract_main(r.text)
     if not markdown_text:
+        from . import progress as _p
+        _p.bump_failed("empty markdown")
         return None
 
+    from . import progress as _p
+    _p.bump_seen()
     category = categorize(url, breadcrumb)
     return FetchedPage(
         url=url,
@@ -233,6 +241,9 @@ async def crawl_all(base_url: str | None = None) -> list[FetchedPage]:
         urls = await discover_urls(client, base)
         urls = sorted(set(u for u in urls if same_host(u, base)))
         logger.info("discovered %d urls", len(urls))
+        from . import progress as _p
+        _p.set_discovered(len(urls))
+        _p.set_phase("fetching")
 
         async def _one(u: str) -> FetchedPage | None:
             async with sem:
