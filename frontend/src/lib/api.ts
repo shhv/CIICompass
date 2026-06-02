@@ -1,4 +1,4 @@
-const API_BASE = (import.meta as any).env?.VITE_API_BASE ?? "http://localhost:8000";
+const API_BASE = (import.meta as any).env?.VITE_API_BASE ?? "";
 
 export type AgentEvent =
   | { type: "text"; delta: string }

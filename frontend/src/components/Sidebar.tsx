@@ -84,9 +84,11 @@ function ContactForm() {
 export function Sidebar({
   open,
   onToggle,
+  onNewChat,
 }: {
   open: boolean;
   onToggle: () => void;
+  onNewChat?: () => void;
 }) {
   const [status, setStatus] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -176,6 +178,13 @@ export function Sidebar({
 
       {open && (
         <div className="h-[calc(100%-3.5rem)] overflow-y-auto p-5 space-y-5">
+          <button
+            onClick={onNewChat}
+            className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm font-medium text-gray-700"
+          >
+            + New chat
+          </button>
+
           <label className="flex items-center justify-between text-xs text-slate-600 cursor-pointer select-none">
             <span>Dev mode</span>
             <span className="relative inline-flex items-center">

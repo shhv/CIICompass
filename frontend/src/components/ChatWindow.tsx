@@ -8,10 +8,32 @@ type UIMessage = ChatMessage & {
   citations?: Citation[];
   toolCalls?: ToolCall[];
   pending?: boolean;
+  timestamp?: number; // ms since epoch; persisted in localStorage alongside message content
 };
 
-export function ChatWindow() {
-  const [messages, setMessages] = useState<UIMessage[]>([]);
+const HISTORY_KEY = "cii.chatHistory";
+
+function loadHistory(): UIMessage[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as UIMessage[];
+    return parsed.map((m) => (m.pending ? { ...m, pending: false } : m));
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(msgs: UIMessage[]) {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(msgs.filter((m) => !m.pending)));
+  } catch {
+    // Quota exceeded or private mode — fail silently
+  }
+}
+
+export function ChatWindow({ onClearReady }: { onClearReady?: (fn: () => void) => void }) {
+  const [messages, setMessages] = useState<UIMessage[]>(loadHistory);
   const [busy, setBusy] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -19,11 +41,26 @@ export function ChatWindow() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    saveHistory(messages);
+  }, [messages]);
+
+  useEffect(() => {
+    if (!onClearReady) return;
+    onClearReady(() => {
+      localStorage.removeItem(HISTORY_KEY);
+      setMessages([]);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const send = async (text: string) => {
+    // Stamp both messages at send time so timestamps survive localStorage round-trips
+    const now = Date.now();
     const next: UIMessage[] = [
       ...messages,
-      { role: "user", content: text },
-      { role: "assistant", content: "", citations: [], toolCalls: [], pending: true },
+      { role: "user", content: text, timestamp: now },
+      { role: "assistant", content: "", citations: [], toolCalls: [], pending: true, timestamp: now },
     ];
     setMessages(next);
     setBusy(true);
@@ -90,6 +127,7 @@ export function ChatWindow() {
               citations={m.citations}
               toolCalls={m.toolCalls}
               pending={m.pending}
+              timestamp={m.timestamp}
               question={
                 m.role === "assistant" && i > 0 && messages[i - 1].role === "user"
                   ? messages[i - 1].content
