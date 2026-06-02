@@ -8,6 +8,7 @@ type UIMessage = ChatMessage & {
   citations?: Citation[];
   toolCalls?: ToolCall[];
   pending?: boolean;
+  timestamp?: number; // ms since epoch; persisted in localStorage alongside message content
 };
 
 const HISTORY_KEY = "cii.chatHistory";
@@ -54,10 +55,12 @@ export function ChatWindow({ onClearReady }: { onClearReady?: (fn: () => void) =
   }, []);
 
   const send = async (text: string) => {
+    // Stamp both messages at send time so timestamps survive localStorage round-trips
+    const now = Date.now();
     const next: UIMessage[] = [
       ...messages,
-      { role: "user", content: text },
-      { role: "assistant", content: "", citations: [], toolCalls: [], pending: true },
+      { role: "user", content: text, timestamp: now },
+      { role: "assistant", content: "", citations: [], toolCalls: [], pending: true, timestamp: now },
     ];
     setMessages(next);
     setBusy(true);
@@ -124,6 +127,7 @@ export function ChatWindow({ onClearReady }: { onClearReady?: (fn: () => void) =
               citations={m.citations}
               toolCalls={m.toolCalls}
               pending={m.pending}
+              timestamp={m.timestamp}
               question={
                 m.role === "assistant" && i > 0 && messages[i - 1].role === "user"
                   ? messages[i - 1].content

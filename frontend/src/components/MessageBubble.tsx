@@ -27,7 +27,7 @@ function FeedbackBar({ question, answer }: { question: string; answer: string })
   const base =
     "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs border transition-colors disabled:opacity-50";
   return (
-    <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-2 text-slate-500">
+    <div className="flex items-center gap-2 text-slate-500">
       <span className="text-xs">Was this helpful?</span>
       <button
         type="button"
@@ -63,6 +63,15 @@ function FeedbackBar({ question, answer }: { question: string; answer: string })
 }
 
 export type ToolCall = { name: string; input: any };
+
+// Shows time only for today's messages; adds date prefix for older persisted messages
+function fmtTime(ts: number) {
+  const d = new Date(ts);
+  const isToday = d.toDateString() === new Date().toDateString();
+  return isToday
+    ? d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
+    : d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
 
 function ToolCallsBlock({ toolCalls }: { toolCalls: ToolCall[] }) {
   const [open, setOpen] = useState(false);
@@ -101,6 +110,7 @@ export function MessageBubble({
   toolCalls,
   pending,
   question,
+  timestamp,
 }: {
   role: "user" | "assistant";
   content: string;
@@ -108,10 +118,20 @@ export function MessageBubble({
   toolCalls?: ToolCall[];
   pending?: boolean;
   question?: string;
+  timestamp?: number;
 }) {
   const isUser = role === "user";
+  const [copied, setCopied] = useState(false);
+
+  // Copy button: writes raw markdown to clipboard; briefly shows "✓ Copied" then resets
+  const copyContent = () => {
+    navigator.clipboard.writeText(content).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"} my-6`}>
+    <div className={`flex flex-col ${isUser ? "items-end" : "items-start"} my-6`}>
       <div
         className={
           isUser
@@ -147,10 +167,25 @@ export function MessageBubble({
           </div>
         )}
         {!isUser && citations && <SourcesPanel citations={citations} />}
-        {!isUser && !pending && content && question && (
-          <FeedbackBar question={question} answer={content} />
+        {!isUser && !pending && content && (
+          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-2 text-slate-500">
+            <button
+              onClick={copyContent}
+              className="text-xs text-slate-400 hover:text-slate-600 transition mr-auto"
+              title="Copy response"
+            >
+              {copied ? "✓ Copied" : "Copy"}
+            </button>
+            {question && <FeedbackBar question={question} answer={content} />}
+          </div>
         )}
       </div>
+      {/* Timestamp rendered below the bubble; right-aligned for user, left for assistant */}
+      {timestamp && (
+        <div className={`text-[11px] text-slate-400 mt-1 px-1 ${isUser ? "text-right" : ""}`}>
+          {fmtTime(timestamp)}
+        </div>
+      )}
     </div>
   );
 }
