@@ -10,14 +10,48 @@ type UIMessage = ChatMessage & {
   pending?: boolean;
 };
 
-export function ChatWindow() {
-  const [messages, setMessages] = useState<UIMessage[]>([]);
+const HISTORY_KEY = "cii.chatHistory";
+
+function loadHistory(): UIMessage[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as UIMessage[];
+    return parsed.map((m) => (m.pending ? { ...m, pending: false } : m));
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(msgs: UIMessage[]) {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(msgs.filter((m) => !m.pending)));
+  } catch {
+    // Quota exceeded or private mode — fail silently
+  }
+}
+
+export function ChatWindow({ onClearReady }: { onClearReady?: (fn: () => void) => void }) {
+  const [messages, setMessages] = useState<UIMessage[]>(loadHistory);
   const [busy, setBusy] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    saveHistory(messages);
+  }, [messages]);
+
+  useEffect(() => {
+    if (!onClearReady) return;
+    onClearReady(() => {
+      localStorage.removeItem(HISTORY_KEY);
+      setMessages([]);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const send = async (text: string) => {
     const next: UIMessage[] = [

@@ -10,6 +10,7 @@ export default function App() {
       return true;
     }
   });
+  const [clearChat, setClearChat] = useState<(() => void) | null>(null);
   const toggle = () => {
     setOpen((v) => {
       const next = !v;
@@ -23,9 +24,9 @@ export default function App() {
   };
   return (
     <div className="flex h-full">
-      <Sidebar open={open} onToggle={toggle} />
+      <Sidebar open={open} onToggle={toggle} onNewChat={clearChat ?? undefined} />
       <main className="flex-1 min-w-0">
-        <ChatWindow />
+        <ChatWindow onClearReady={(fn) => setClearChat(() => fn)} />
       </main>
     </div>
   );
