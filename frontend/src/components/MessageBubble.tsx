@@ -82,14 +82,24 @@ function splitReferences(md: string): { body: string; refs: string | null; count
   return { body, refs: refsBlock, count: count || refsBlock.split("\n").filter(Boolean).length };
 }
 
-function ReferencesBlock({ refs, count }: { refs: string; count: number }) {
+function ReferencesBlock({
+  refs,
+  count,
+  pending,
+}: {
+  refs: string;
+  count: number;
+  pending?: boolean;
+}) {
+  // Stay open while streaming so refs visibly appear, then collapse on done.
+  const [userOpen, setUserOpen] = useState<boolean | null>(null);
   const collapsible = count > 2;
-  const [open, setOpen] = useState(!collapsible);
+  const open = userOpen ?? (pending || !collapsible);
   return (
     <div className="mt-8 pt-4 border-t border-slate-200">
       {collapsible ? (
         <button
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setUserOpen(!open)}
           className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-700 transition"
           aria-expanded={open}
         >
@@ -225,13 +235,13 @@ export function MessageBubble({
               return (
                 <>
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{md}</ReactMarkdown>
-                  {refs && <ReferencesBlock refs={refs} count={count} />}
+                  {refs && <ReferencesBlock refs={refs} count={count} pending={pending} />}
                 </>
               );
             })()}
           </div>
         )}
-        {!isUser && citations && <SourcesPanel citations={citations} />}
+        {!isUser && citations && <SourcesPanel citations={citations} pending={pending} />}
         {!isUser && !pending && content && (
           <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-2 text-slate-500">
             <button

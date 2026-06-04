@@ -21,17 +21,25 @@ export function CitationChip({ index, url }: { index: number; url: string }) {
   );
 }
 
-export function SourcesPanel({ citations }: { citations: Citation[] }) {
-  // Collapse only when the list is long enough to matter (>2). Short lists
-  // stay expanded so the user doesn't need an extra click for almost nothing.
+export function SourcesPanel({
+  citations,
+  pending,
+}: {
+  citations: Citation[];
+  pending?: boolean;
+}) {
+  // Stay expanded while the answer is streaming so the user can watch sources
+  // arrive. Once streaming finishes, collapse if the list is long (>2). The
+  // user's explicit click wins from then on.
+  const [userOpen, setUserOpen] = useState<boolean | null>(null);
   const collapsible = citations.length > 2;
-  const [open, setOpen] = useState(!collapsible);
+  const open = userOpen ?? (pending || !collapsible);
   if (!citations.length) return null;
   return (
     <div className="mt-6 pt-4 border-t border-slate-200">
       {collapsible ? (
         <button
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setUserOpen(!open)}
           className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-700 transition"
           aria-expanded={open}
         >
