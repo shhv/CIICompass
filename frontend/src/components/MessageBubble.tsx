@@ -64,6 +64,64 @@ function FeedbackBar({ question, answer }: { question: string; answer: string })
 
 export type ToolCall = { name: string; input: any };
 
+// The model emits an in-answer `### References` section per the system prompt
+// (see backend/app/agent/prompts.py). Split it from the body so we can collapse
+// long lists; short lists (≤2) stay expanded.
+function splitReferences(md: string): { body: string; refs: string | null; count: number } {
+  // Match `### References` or `## References` at the start of a line.
+  const m = md.match(/^\s*#{2,3}\s+References\s*$/im);
+  if (!m || m.index === undefined) return { body: md, refs: null, count: 0 };
+  const body = md.slice(0, m.index).trimEnd();
+  const refsBlock = md.slice(m.index + m[0].length).trim();
+  if (!refsBlock) return { body: md, refs: null, count: 0 };
+  // Count non-empty lines that look like list/numbered entries.
+  const count = refsBlock
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => /^(\[\d+\]|[-*]|\d+\.)/.test(l)).length;
+  return { body, refs: refsBlock, count: count || refsBlock.split("\n").filter(Boolean).length };
+}
+
+function ReferencesBlock({ refs, count }: { refs: string; count: number }) {
+  const collapsible = count > 2;
+  const [open, setOpen] = useState(!collapsible);
+  return (
+    <div className="mt-8 pt-4 border-t border-slate-200">
+      {collapsible ? (
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-700 transition"
+          aria-expanded={open}
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`transition-transform ${open ? "rotate-90" : ""}`}
+          >
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+          References ({count})
+        </button>
+      ) : (
+        <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
+          References
+        </div>
+      )}
+      {open && (
+        <div className="mt-3 prose prose-sm prose-slate max-w-none prose-p:my-1 prose-li:my-1 prose-a:text-sky-600">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{refs}</ReactMarkdown>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Shows time only for today's messages; adds date prefix for older persisted messages
 function fmtTime(ts: number) {
   const d = new Date(ts);
@@ -161,9 +219,16 @@ export function MessageBubble({
               prose-hr:border-slate-200 prose-hr:my-8
               prose-table:text-sm prose-th:bg-slate-50 prose-table:my-5"
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {content || (pending ? "_thinking…_" : "")}
-            </ReactMarkdown>
+            {(() => {
+              const { body, refs, count } = splitReferences(content);
+              const md = body || (pending ? "_thinking…_" : "");
+              return (
+                <>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{md}</ReactMarkdown>
+                  {refs && <ReferencesBlock refs={refs} count={count} />}
+                </>
+              );
+            })()}
           </div>
         )}
         {!isUser && citations && <SourcesPanel citations={citations} />}
