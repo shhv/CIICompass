@@ -97,11 +97,32 @@ def index_pages(pages: list[FetchedPage], force: bool = False) -> dict[str, int]
 
 async def run_full_pipeline(force: bool = False) -> dict[str, int]:
     from . import progress
+    from .github_crawler import crawl_all_github_repos, discover_github_repos_from_pages
+
     progress.reset()
     progress.set_phase("discovering")
+
+    # 1. Crawl docs.oort.io
     pages = await crawl_all()
+
+    # 2. Determine GitHub repos to crawl (configured + discovered from docs)
+    settings = get_settings()
+    repo_slugs = set(settings.github_repo_list)
+    if settings.github_follow_links:
+        discovered = discover_github_repos_from_pages(pages)
+        new_repos = discovered - repo_slugs
+        if new_repos:
+            logger.info("discovered %d GitHub repos from docs: %s", len(new_repos), new_repos)
+        repo_slugs |= discovered
+
+    # 3. Crawl GitHub repos
+    if repo_slugs:
+        github_pages = await crawl_all_github_repos(sorted(repo_slugs))
+        pages.extend(github_pages)
+        logger.info("github crawl complete: %d pages from %d repos", len(github_pages), len(repo_slugs))
+
     progress.set_phase("indexing")
-    logger.info("crawl complete: %d pages", len(pages))
+    logger.info("crawl complete: %d total pages", len(pages))
     # offload indexing (CPU + sync IO) to a thread to keep loop responsive
     result = await asyncio.to_thread(index_pages, pages, force)
     progress.set_indexed(

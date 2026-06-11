@@ -18,7 +18,7 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "search_docs",
         "description": (
-            "Search the indexed CII documentation (docs.oort.io). Returns the top "
+            "Search the indexed CII documentation (docs.oort.io) and GitHub repos. Returns the top "
             "matching chunks with title, URL, snippet, and category. Use this first "
             "for any factual or how-to question."
         ),
@@ -36,6 +36,10 @@ TOOLS: list[dict[str, Any]] = [
                         "capability",
                         "feature-announce",
                         "troubleshooting",
+                        "github-readme",
+                        "github-doc",
+                        "github-code",
+                        "github-license",
                     ],
                     "description": "Optional filter by doc category.",
                 },
@@ -77,6 +81,10 @@ TOOLS: list[dict[str, Any]] = [
                         "capability",
                         "feature-announce",
                         "troubleshooting",
+                        "github-readme",
+                        "github-doc",
+                        "github-code",
+                        "github-license",
                     ],
                 },
                 "limit": {"type": "integer", "default": 50, "minimum": 1, "maximum": 200},

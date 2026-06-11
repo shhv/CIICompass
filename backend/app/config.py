@@ -47,6 +47,16 @@ class Settings(BaseSettings):
     smtp_from: str = Field(default="", alias="SMTP_FROM")
     smtp_starttls: bool = Field(default=True, alias="SMTP_STARTTLS")
 
+    # GitHub repo sources (comma-separated "owner/repo" slugs)
+    github_repos: str = Field(default="", alias="GITHUB_REPOS")
+    github_token: str = Field(default="", alias="GITHUB_TOKEN")
+    github_index_extensions: str = Field(
+        default=".md,.txt,.py,.ps1,.psd1,.psm1,.sh,.yml,.yaml,.json,.toml,.cfg,.ini,.rst,.adoc",
+        alias="GITHUB_INDEX_EXTENSIONS",
+    )
+    github_max_file_bytes: int = Field(default=100_000, alias="GITHUB_MAX_FILE_BYTES")
+    github_follow_links: bool = Field(default=True, alias="GITHUB_FOLLOW_LINKS")
+
     webex_bot_token: str = Field(default="", alias="WEBEX_BOT_TOKEN")
     webex_webhook_secret: str = Field(default="", alias="WEBEX_WEBHOOK_SECRET")
     webex_api_base: str = Field(default="https://webexapis.com/v1", alias="WEBEX_API_BASE")
@@ -55,6 +65,14 @@ class Settings(BaseSettings):
         alias="WEBEX_ACK_MESSAGE",
     )
     webex_max_concurrent: int = Field(default=8, alias="WEBEX_MAX_CONCURRENT")
+
+    @property
+    def github_repo_list(self) -> list[str]:
+        return [r.strip() for r in self.github_repos.split(",") if r.strip()]
+
+    @property
+    def github_extension_set(self) -> set[str]:
+        return {e.strip().lower() for e in self.github_index_extensions.split(",") if e.strip()}
 
     @property
     def cors_origin_list(self) -> list[str]:
