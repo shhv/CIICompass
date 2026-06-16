@@ -140,39 +140,59 @@ doc-grounded answer with markdown citations.
 - Webhook signatures are verified with `WEBEX_WEBHOOK_SECRET` when set.
   Leave it blank to disable verification (not recommended).
 
-## Commands to run the skills
+## Quick start — easy mode (no coding required)
+
+If you have [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed, you can run the entire project without touching the terminal yourself. Claude Code has built-in **skills** (slash commands) that handle all the setup and orchestration for you.
+
+### Prerequisites
+
+1. **Claude Code** installed and working (`claude` command available in your terminal).
+2. A `.env` file in the `backend/` folder with your API keys filled in (copy `backend/.env.example` and add your keys — ask a teammate if you're unsure which keys to use).
+3. **Python 3.11+** and **Node.js 18+** installed on your machine.
+
+### How to use it
+
+1. Open your terminal and `cd` into this project folder.
+2. Run `claude` to start a Claude Code session.
+3. Type the following commands **in the Claude Code prompt** (not your regular terminal):
+
+| Step | Command | What it does |
+|------|---------|--------------|
+| 1 | `/run-cii-dev` | Starts the backend, frontend, and Cloudflare tunnel all at once. Wait until Claude reports all three are healthy. |
+| 2 | `/reindex` | Crawls docs.oort.io and loads the content into the search index. Run this the first time, or whenever docs are updated. |
+| 3 | `/restart-webex-webhook` | Restarts the Cloudflare tunnel and re-registers the Webex bot webhook. Use this if the bot stops responding in Webex. To chat with the bot, search for **CIIcompass** in Webex. |
+
+### Typical first-time flow
+
+```
+/run-cii-dev          ← boots the whole stack
+/reindex              ← populates the doc index (takes a few minutes)
+```
+
+After that, open **http://localhost:5173** in your browser to chat with the assistant.
+
+### Tips
+
+- `/reindex` needs the backend to be running first — always run `/run-cii-dev` before `/reindex`.
+- If the Webex bot stops responding, run `/restart-webex-webhook` to get a fresh tunnel URL and webhook.
+- To stop everything, press **Ctrl+C** in the Claude Code session.
+- You don't need to understand Python, Node.js, or any of the backend code — the skills handle it all.
+
+---
+
+## Running with CLI commands (for developers)
+
+If you prefer running things manually or need more control, the skills above map to these CLI commands.
+
+### Skills reference
 
 Skills are invoked by typing `/<skill-name>` directly in the Claude Code prompt.
 
-### 1. Start the dev stack
-
-```
-/run-cii-dev
-```
-
-Launches:
-- **Backend** — FastAPI on `http://localhost:8000`
-- **Frontend** — Vite on `http://localhost:5173`
-- **Cloudflare tunnel** — exposes the Webex bot endpoint
-
-Wait until all three are reported healthy before moving on.
-
-### 2. Reindex the docs
-
-```
-/reindex
-```
-
-Triggers a re-index of `docs.oort.io` against the running backend, polls progress until completion, and surfaces any failures.
-
-Use this whenever the agent answers "I have no docs" or after docs are updated.
-
-### Typical flow
-
-```
-/run-cii-dev      # boot everything
-/reindex          # populate / refresh the index
-```
+| Skill | What it does |
+|-------|--------------|
+| `/run-cii-dev` | Launches backend (FastAPI `:8000`), frontend (Vite `:5173`), and Cloudflare tunnel |
+| `/reindex` | Re-indexes `docs.oort.io` against the running backend, polls progress, surfaces failures |
+| `/restart-webex-webhook` | Restarts the tunnel and re-registers the Webex webhook |
 
 Notes:
 - `/reindex` requires the backend on `:8000` to be up — run `/run-cii-dev` first.
