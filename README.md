@@ -210,6 +210,27 @@ see an acknowledgement followed by the doc-grounded answer with markdown citatio
 - **Always current** — automated daily re-indexing means the assistant never falls behind doc updates
 - **Works out of the box** — one command (`/run-cii-dev`) boots the entire stack; no ML expertise needed
 
+## Business Value
+
+### Short-term: internal expert buddy
+
+Anyone who supports CII — TAC engineers, partner support, SEs, new hires ramping up — gets an instant expert on demand. Instead of asking a senior engineer or spending 15 minutes digging through docs, they get a cited answer in seconds. Zero training, zero adoption friction (it's in Webex).
+
+- Saves 30+ min/day per support engineer on doc lookups
+- Accelerates onboarding for new hires touching CII
+- Reduces escalations to senior engineers for documentation questions
+
+### Long-term: customer-facing agent with monetization
+
+Embed this agent directly into the CII dashboard as a premium feature. Customers and admins self-diagnose and self-remediate issues without opening a TAC case.
+
+- **Case deflection** — every issue a customer self-solves is a TAC case that never gets opened
+- **Premium SKU** — "CII with AI Agent" becomes a paid differentiator competitors don't have
+- **ARR impact** — drives upsell to higher tiers and improves renewal rates through better self-service
+- **CSAT lift** — customers prefer instant self-service over waiting in a support queue
+
+> The tech is identical — the only difference is who's asking the question. Internal buddy today, revenue-generating product feature tomorrow.
+
 ## Demo
 
 [abc](abc)
