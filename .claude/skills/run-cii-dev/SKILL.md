@@ -7,6 +7,8 @@ description: Launch the full CII Assistant dev stack locally — backend (FastAP
 
 ## Preconditions to check first
 
+Run ALL of these checks before starting anything:
+
 ```bash
 # Is the backend already up?
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/health
@@ -14,11 +16,46 @@ curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/health
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:5173/
 # .env present?
 test -f backend/.env && echo ".env OK" || echo "MISSING backend/.env"
+# Check dependencies
+command -v python3 >/dev/null && echo "python3 OK" || echo "MISSING python3"
+command -v node >/dev/null && echo "node OK" || echo "MISSING node"
+command -v brew >/dev/null && echo "brew OK" || echo "MISSING brew"
+command -v cloudflared >/dev/null && echo "cloudflared OK" || echo "MISSING cloudflared"
 ```
 
-If any are missing, follow the steps below for the missing layer only.
+If services are already up, skip their steps. For any MISSING dependency, install it
+using the steps below before proceeding.
 
-## 0. Set up .env (first time only)
+## 0a. Install missing dependencies (first time only)
+
+Check each dependency and install whatever is missing. Skip any that are already installed.
+
+**Homebrew** (needed for cloudflared):
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+**Python 3.11+**:
+```bash
+brew install python@3.11
+```
+Verify: `python3 --version` — must be 3.11 or higher.
+
+**Node.js 18+**:
+```bash
+brew install node
+```
+Verify: `node --version` — must be 18 or higher.
+
+**Cloudflare tunnel** (needed for Webex bot):
+```bash
+brew install cloudflared
+```
+
+Tell the user which dependencies were missing and what you installed. If
+Homebrew itself is missing, install it first since the others depend on it.
+
+## 0b. Set up .env (first time only)
 
 If `backend/.env` is **MISSING**, help the user create it:
 
