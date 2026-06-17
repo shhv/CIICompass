@@ -1,6 +1,6 @@
 # CII Assistant
 
-An AI agent that turns hours of doc searching into seconds — grounded answers with citations, delivered in Webex or the browser.
+An AI agent that turns hours of doc searching into seconds with grounded answers, citations, and delivery right in Webex or the browser.
 
 ## Problem Statement
 
