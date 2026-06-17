@@ -30,6 +30,18 @@ Tech under the hood:
 
 ## Setup & Run
 
+There are **two ways** to run this project. **Pick one — you don't need both.**
+
+| | Option A: Claude Code skills | Option B: CLI commands |
+|--|------|------|
+| **For** | Non-coders, CSEs, CSSs, anyone who just wants it running | Developers who want manual control |
+| **How** | Type slash commands in Claude Code | Run terminal commands yourself |
+| **Setup time** | ~2 minutes | ~10 minutes |
+
+---
+
+### Option A: Claude Code skills (recommended)
+
 If you have [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed, you can run the entire project without touching the terminal yourself. Claude Code has built-in **skills** (slash commands) that handle all the setup and orchestration for you.
 
 ### Prerequisites
@@ -69,9 +81,9 @@ After that, open **http://localhost:5173** in your browser to chat with the assi
 
 ---
 
-## Running with CLI commands (for developers)
+### Option B: CLI commands (for developers)
 
-If you prefer running things manually or need more control, this section covers the full setup.
+If you prefer running things manually or need more control, use these commands instead. **Skip this if you already used Option A above.**
 
 ### Backend
 
