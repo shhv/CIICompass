@@ -110,7 +110,16 @@ class ToolExecutor:
 
     async def _search_docs(self, query: str, category: str | None = None, k: int = 8) -> dict[str, Any]:
         results = self.retriever.search(query=query, k=k, category=category)
+        top_score = results[0].score if results else 0.0
+        if top_score >= 0.55:
+            confidence = "high"
+        elif top_score >= 0.35:
+            confidence = "medium"
+        else:
+            confidence = "low"
         return {
+            "confidence": confidence,
+            "top_score": round(top_score, 4),
             "results": [
                 {
                     "chunk_id": r.id,
@@ -121,7 +130,7 @@ class ToolExecutor:
                     "snippet": r.snippet,
                 }
                 for r in results
-            ]
+            ],
         }
 
     async def _fetch_page(self, url: str) -> dict[str, Any]:

@@ -20,13 +20,17 @@ Available in two interfaces:
 
 What makes it agentic (not just search):
 - **Multi-step reasoning** — the AI agent decides what to search, reads the results, and fetches additional pages if the first answer is incomplete
+- **Multi-source intelligence** — ingests both the doc site AND GitHub source code, so answers can draw from documentation and implementation
+- **Heading-aware chunking** — every chunk knows exactly where it sits in the doc hierarchy (e.g. "Admin Guide > Policies > Risk Scoring"), so the model always has structural context
+- **Confidence-aware answers** — retrieval scores are classified as high/medium/low, and the agent calibrates its response accordingly — no low-confidence results presented as fact
+- **Graceful fallback** — when docs don't have the answer, the agent asks clarifying questions instead of hallucinating or saying "I don't know"
 - **Grounded citations** — every claim links back to the exact doc page, so you can verify in one click
-- **Self-updating index** — daily incremental re-crawl keeps answers current as docs evolve
+- **Self-updating index** — daily incremental re-crawl keeps answers current as docs evolve (only re-embeds pages that actually changed, using content hashing)
 
 Tech under the hood:
-- Sitemap-driven crawler + heading-aware chunker → Voyage embeddings → ChromaDB
+- Sitemap-driven crawler + GitHub repo crawler → heading-aware chunker → Voyage embeddings → ChromaDB
 - Hybrid retrieval: vector search + BM25 reranking (60/40 blend)
-- Claude tool-use loop with adaptive thinking, streaming answers over SSE
+- Claude tool-use loop with adaptive thinking + prompt caching for cost efficiency, streaming answers over SSE
 
 ## Setup & Run
 

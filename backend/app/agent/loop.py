@@ -129,6 +129,8 @@ async def run_agent(
 
             # Emit citation events for any new URLs surfaced
             if name == "search_docs":
+                confidence = result.get("confidence", "high")
+                yield {"type": "confidence", "level": confidence, "score": result.get("top_score", 0)}
                 for r in result.get("results", []):
                     u = r.get("url")
                     if u and u not in cited_urls:
