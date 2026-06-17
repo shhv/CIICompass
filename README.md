@@ -46,21 +46,24 @@ There are **two ways** to run this project. **Pick one — you don't need both.*
 
 ### Option A: Claude Code skills (recommended)
 
-If you have [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed, you can run the entire project without touching the terminal yourself. Claude Code has built-in **skills** (slash commands) that handle all the setup and orchestration for you.
+If you have [Claude Code](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) installed, you can run the entire project without touching the terminal yourself. Claude Code has built-in **skills** (slash commands) that handle all the setup and orchestration for you.
 
 ### Prerequisites
 
-1. **Claude Code** installed and working (`claude` command available in your terminal).
-2. **Python 3.11+** — [download here](https://www.python.org/downloads/) if not installed. Check with `python3 --version`.
-3. **Node.js 18+** — [download here](https://nodejs.org/) if not installed. Check with `node --version`.
-4. **Homebrew** (macOS only) — needed for installing dependencies. Install with `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` if not installed.
-5. **Anthropic API key** — the skill will ask for this on first run. Ask a teammate if you don't have one.
+1. **Terminal access** — you need a terminal app (macOS: Terminal.app or iTerm2; Windows: PowerShell or Windows Terminal). If you've never used one, [watch this 2-min intro](https://www.youtube.com/watch?v=aKRYQsKR46I).
+2. **Xcode Command Line Tools** (macOS) — required before anything else. Open Terminal and run: `xcode-select --install`. Click "Install" in the popup and wait for it to finish. This gives you git, compilers, and other dev essentials.
+3. **Claude Code** installed and working (`claude` command available in your terminal). Follow the [claudegate getting started guide](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) — **VPN required** for installation and GitHub setup.
+4. **Python 3.11+** — [download here](https://www.python.org/downloads/) if not installed. Check with `python3 --version`.
+5. **Node.js 18+** — [download here](https://nodejs.org/) if not installed. Check with `node --version`.
+6. **Homebrew** (macOS only) — needed for installing dependencies. Install with `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` if not installed.
+7. **Anthropic API key** — the skill will ask for this on first run. Ask a teammate if you don't have one.
 
 ### How to use it
 
-1. Open your terminal and `cd` into this project folder.
-2. Run `claude` to start a Claude Code session.
-3. Type the following commands **in the Claude Code prompt** (not your regular terminal):
+1. Open your terminal app.
+2. Navigate to this project folder: `cd path/to/cii-assistant-haiku`
+3. Run `claude` to start a Claude Code session (this opens an interactive AI prompt inside your terminal).
+4. Type the following commands **in the Claude Code prompt** (not your regular terminal):
 
 | Step | Command | What it does |
 |------|---------|--------------|
