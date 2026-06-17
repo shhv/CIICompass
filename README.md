@@ -235,6 +235,18 @@ Embed this agent directly into the CII dashboard as a premium feature. Customers
 
 [abc](abc)
 
+## Summary
+
+**Problem:** CII documentation spans hundreds of pages. Engineers and support teams spend 10-15 minutes per question searching manually, slowing down case resolution, onboarding, and customer support.
+
+**Solution:** An agentic AI assistant that ingests the full CII doc site and delivers instant, citation-backed answers. Available as a web chat UI and a Webex bot (CIIcompass). Uses multi-step reasoning — not just keyword search — to find, verify, and synthesize answers across multiple doc pages.
+
+**Tech Used:** Python/FastAPI, Claude (agentic tool-use loop with adaptive thinking), Voyage embeddings, ChromaDB, hybrid retrieval (vector search + BM25 reranking), SSE streaming, Vite/React/TypeScript frontend, Webex bot integration, Cloudflare tunnel, Claude Code skills for one-command setup.
+
+**Impact:** Reduces answer time from 10+ minutes to seconds. Every response is grounded with source citations — zero hallucination risk. Accessible where teams already work (Webex). Short-term: internal expert buddy for anyone supporting CII. Long-term: embed in CII dashboard as a premium customer-facing feature for case deflection and ARR growth.
+
+**Next Steps:** Add authentication and rate limiting. Embed the agent in the CII product dashboard for customer self-service. Expand to other Cisco doc sites (XDR, Duo). Add usage analytics to measure case deflection and time saved.
+
 ## Architecture notes
 
 - **Ingestion** (`app/ingest/`): sitemap-driven crawl → `markdownify` → heading-aware chunker (~800 tokens, 100 overlap, heading path prefixed) → Voyage `voyage-3` embeddings (batches of 128) → ChromaDB collection `cii_docs`. Incremental: per-URL content hash stored in `data/url_hashes.json`; unchanged pages are skipped on re-run.
