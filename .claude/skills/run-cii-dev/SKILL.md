@@ -1,6 +1,6 @@
 ---
 name: run-cii-dev
-description: Launch the full CII Assistant dev stack locally — backend (FastAPI on :8000), frontend (Vite on :5173), and Cloudflare tunnel for the Webex bot. Use this when the user asks to start, run, or boot the CII assistant for development.
+description: Launch the CII Assistant dev stack locally — backend (FastAPI on :8000) and frontend (Vite on :5173). Use this when the user asks to start, run, or boot the CII assistant for development. Does NOT handle the Webex bot tunnel — use /start-webex-webhook for that.
 ---
 
 # Launch the CII Assistant dev stack
@@ -20,7 +20,6 @@ test -f backend/.env && echo ".env OK" || echo "MISSING backend/.env"
 command -v python3 >/dev/null && echo "python3 OK" || echo "MISSING python3"
 command -v node >/dev/null && echo "node OK" || echo "MISSING node"
 command -v brew >/dev/null && echo "brew OK" || echo "MISSING brew"
-command -v cloudflared >/dev/null && echo "cloudflared OK" || echo "MISSING cloudflared"
 ```
 
 If services are already up, skip their steps. For any MISSING dependency, install it
@@ -30,7 +29,7 @@ using the steps below before proceeding.
 
 Check each dependency and install whatever is missing. Skip any that are already installed.
 
-**Homebrew** (needed for cloudflared):
+**Homebrew** (needed for python/node installs):
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
@@ -46,11 +45,6 @@ Verify: `python3 --version` — must be 3.11 or higher.
 brew install node
 ```
 Verify: `node --version` — must be 18 or higher.
-
-**Cloudflare tunnel** (needed for Webex bot):
-```bash
-brew install cloudflared
-```
 
 Tell the user which dependencies were missing and what you installed. If
 Homebrew itself is missing, install it first since the others depend on it.
@@ -102,61 +96,11 @@ npm install     # no-op if up to date
 npm run dev     # http://localhost:5173, proxies /api → :8000
 ```
 
-## 3. Cloudflare tunnel (Webex bot only)
-
-Skip this if not testing the Webex bot.
-
-```bash
-cloudflared tunnel --url http://localhost:8000 --protocol http2
-```
-
-**Always pass `--protocol http2`** — default QUIC (UDP/7844) is blocked on
-Cisco corp networks and you'll get "failed to dial a quic connection"
-errors.
-
-Copy the printed `https://<random>.trycloudflare.com` URL.
-
-## 4. Re-register the Webex webhook (only if tunnel URL changed)
-
-The trycloudflare URL is randomized every restart. Any time it changes,
-delete old webhooks and register a new one:
-
-```bash
-cd backend
-WEBEX_BOT_TOKEN=$(grep '^WEBEX_BOT_TOKEN=' .env | cut -d= -f2-)
-WEBEX_WEBHOOK_SECRET=$(grep '^WEBEX_WEBHOOK_SECRET=' .env | cut -d= -f2-)
-TUNNEL_URL="https://<new-tunnel>.trycloudflare.com"
-
-# List existing
-curl -s -H "Authorization: Bearer $WEBEX_BOT_TOKEN" \
-  https://webexapis.com/v1/webhooks | python3 -m json.tool
-
-# Delete stale ones by id
-curl -X DELETE -H "Authorization: Bearer $WEBEX_BOT_TOKEN" \
-  https://webexapis.com/v1/webhooks/<id>
-
-# Register the new one
-curl -X POST https://webexapis.com/v1/webhooks \
-  -H "Authorization: Bearer $WEBEX_BOT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"name\": \"CIICompass\",
-    \"targetUrl\": \"$TUNNEL_URL/api/webex/webhook\",
-    \"resource\": \"messages\",
-    \"event\": \"created\",
-    \"secret\": \"$WEBEX_WEBHOOK_SECRET\"
-  }"
-```
-
-**Don't use `set -a; source .env`** — the `.env` has comment lines that
-aren't `KEY=value` and zsh chokes. Use the `grep | cut` extraction above.
-
-## Verify everything is wired
+## Verify
 
 ```bash
 curl -s -o /dev/null -w "backend: %{http_code}\n"  http://localhost:8000/health
 curl -s -o /dev/null -w "frontend: %{http_code}\n" http://localhost:5173/
-curl -s -o /dev/null -w "tunnel:   %{http_code}\n" "$TUNNEL_URL/health"
 curl -s http://localhost:8000/api/status | python3 -c "
 import sys, json
 d = json.load(sys.stdin)
@@ -165,6 +109,6 @@ print(f'job:   {d[\"job\"][\"status\"]}')
 "
 ```
 
-All three should return 200. If `pages: 0`, see the `reindex` skill.
+Both should return 200. If `pages: 0`, run the `/reindex` skill.
 
-Then DM `CIICompass@webex.bot` in Webex with a test question.
+To set up the Webex bot, run `/start-webex-webhook` separately.

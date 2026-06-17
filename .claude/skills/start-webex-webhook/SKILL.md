@@ -15,9 +15,20 @@ so the bot keeps working after a tunnel/laptop restart.
 curl -s -o /dev/null -w "backend: %{http_code}\n" http://localhost:8000/health
 # .env must have token + secret
 test -f backend/.env && grep -E '^(WEBEX_BOT_TOKEN|WEBEX_WEBHOOK_SECRET)=' backend/.env
+# cloudflared installed?
+command -v cloudflared >/dev/null && echo "cloudflared OK" || echo "MISSING cloudflared"
+command -v brew >/dev/null && echo "brew OK" || echo "MISSING brew"
 ```
 
 If backend is down, run `/run-cii-dev` first.
+
+If `cloudflared` is missing, install it:
+```bash
+# Install Homebrew first if missing
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+# Then install cloudflared
+brew install cloudflared
+```
 
 ## 1. Kill any existing cloudflared
 
