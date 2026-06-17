@@ -13,7 +13,7 @@ from .tools import TOOLS, ToolExecutor
 
 logger = logging.getLogger(__name__)
 
-MAX_ITERATIONS = 8
+MAX_ITERATIONS = 12
 MAX_TOKENS = 4096
 
 
