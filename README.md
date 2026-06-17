@@ -34,7 +34,27 @@ Tech under the hood:
 
 ## Setup & Run
 
-There are **two ways** to run this project. **Pick one — you don't need both.**
+### Step 0: Get the project (do this first)
+
+1. Open **Terminal** (macOS: search for "Terminal" in Spotlight, or find it in Applications → Utilities).
+2. Download the project:
+   - Go to the [GitHub repo](https://github.com/shhv_cisco/cii-assistant/tree/haiku-fallback-routing)
+   - Click the green **Code** button → **Download ZIP**
+   - Unzip the file (double-click it on macOS)
+3. In Terminal, navigate into the unzipped folder:
+   ```bash
+   cd ~/Downloads/cii-assistant-haiku-fallback-routing
+   ```
+4. Start Claude Code:
+   ```bash
+   claude
+   ```
+
+You're now inside Claude Code and ready to use the skills below.
+
+---
+
+There are **two ways** to run this project from here. **Pick one — you don't need both.**
 
 | | Option A: Claude Code skills | Option B: CLI commands |
 |--|------|------|
@@ -60,10 +80,7 @@ If you have [Claude Code](https://wwwin-github.cisco.com/netascode/claudegate/bl
 
 ### How to use it
 
-1. Open your terminal app.
-2. Navigate to this project folder: `cd path/to/cii-assistant-haiku`
-3. Run `claude` to start a Claude Code session (this opens an interactive AI prompt inside your terminal).
-4. Type the following commands **in the Claude Code prompt** (not your regular terminal):
+Type the following commands **in the Claude Code prompt** (not your regular terminal):
 
 | Step | Command | What it does |
 |------|---------|--------------|
