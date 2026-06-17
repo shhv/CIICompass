@@ -210,26 +210,35 @@ see an acknowledgement followed by the doc-grounded answer with markdown citatio
 - **Always current** — automated daily re-indexing means the assistant never falls behind doc updates
 - **Works out of the box** — one command (`/run-cii-dev`) boots the entire stack; no ML expertise needed
 
-## Business Value
+## Business Value & Rollout
 
-### Short-term: internal expert buddy
+### Phase 1 — now: CSE/CSS expert buddy (ready today)
 
-Anyone who supports CII — TAC engineers, partner support, SEs, new hires ramping up — gets an instant expert on demand. Instead of asking a senior engineer or spending 15 minutes digging through docs, they get a cited answer in seconds. Zero training, zero adoption friction (it's in Webex).
+Anyone who supports CII — CSEs, CSSs, partner support, SEs, new hires ramping up — gets an instant expert on demand. Run it locally with your own API keys, no deployment or ops overhead. Clone the repo, add your keys, run `/run-cii-dev`, and start getting cited answers in seconds instead of spending 15 minutes digging through docs.
 
 - Saves 30+ min/day per support engineer on doc lookups
 - Accelerates onboarding for new hires touching CII
 - Reduces escalations to senior engineers for documentation questions
+- Zero adoption friction — answers arrive in Webex (CIIcompass) or the web UI
 
-### Long-term: customer-facing agent with monetization
+### Phase 2 — next: centrally hosted shared instance
 
-Embed this agent directly into the CII dashboard as a premium feature. Customers and admins self-diagnose and self-remediate issues without opening a TAC case.
+Host a shared instance so the whole CII support org can use it without running anything locally. Adds rate limiting, authentication, and usage analytics.
+
+- One instance serves all CSE/CSS teams
+- Usage data shows which topics cause the most questions — feeds back into doc improvements
+- Cost-controlled with rate limits and shared API keys
+
+### Phase 3 — long-term: embedded in the CII dashboard with monetization
+
+Embed the agent directly into the CII product dashboard as a premium customer-facing feature. Customers and admins self-diagnose and self-remediate issues without opening a TAC case.
 
 - **Case deflection** — every issue a customer self-solves is a TAC case that never gets opened
 - **Premium SKU** — "CII with AI Agent" becomes a paid differentiator competitors don't have
 - **ARR impact** — drives upsell to higher tiers and improves renewal rates through better self-service
 - **CSAT lift** — customers prefer instant self-service over waiting in a support queue
 
-> The tech is identical — the only difference is who's asking the question. Internal buddy today, revenue-generating product feature tomorrow.
+> The tech is identical across all three phases — the only difference is where it runs and who's asking the question.
 
 ## Demo
 
@@ -245,7 +254,7 @@ Embed this agent directly into the CII dashboard as a premium feature. Customers
 
 **Impact:** Reduces answer time from 10+ minutes to seconds. Every response is grounded with source citations — zero hallucination risk. Accessible where teams already work (Webex). Short-term: internal expert buddy for anyone supporting CII. Long-term: embed in CII dashboard as a premium customer-facing feature for case deflection and ARR growth.
 
-**Next Steps:** Add authentication and rate limiting. Embed the agent in the CII product dashboard for customer self-service. Expand to other Cisco doc sites (XDR, Duo). Add usage analytics to measure case deflection and time saved.
+**Next Steps:** Phase 1 (now) — CSE/CSS teams use it locally with their own API keys for day-to-day work. Phase 2 — host a shared instance with rate limiting, auth, and usage analytics. Phase 3 — embed the agent in the CII product dashboard as a premium customer-facing feature for case deflection and ARR growth. Expand to other Cisco doc sites (XDR, Duo).
 
 ## Architecture notes
 
