@@ -34,7 +34,17 @@ Tech under the hood:
 
 ## Setup & Run
 
-### Step 0: Get the project (do this first)
+### Prerequisites
+
+1. **Terminal access** — you need a terminal app (macOS: Terminal.app or iTerm2; Windows: PowerShell or Windows Terminal). If you've never used one, [watch this 2-min intro](https://www.youtube.com/watch?v=aKRYQsKR46I).
+2. **Xcode Command Line Tools** (macOS only) — required before anything else. Open Terminal and run: `xcode-select --install`. Click "Install" in the popup and wait for it to finish. This gives you git, compilers, and other dev essentials. *(Windows users: skip this step.)*
+3. **Claude Code** installed and working (`claude` command available in your terminal). Follow the [claudegate getting started guide](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) — **VPN required** for installation and GitHub setup.
+4. **Python 3.11+** — [download here](https://www.python.org/downloads/) if not installed. Check with `python3 --version` (macOS) or `python --version` (Windows).
+5. **Node.js 18+** — [download here](https://nodejs.org/) if not installed. Check with `node --version`.
+6. **Homebrew** (macOS only) — needed for installing dependencies. Install with `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` if not installed. *(Windows users: skip this step — Python and Node installers handle everything.)*
+7. **Anthropic API key** — the skill will ask for this on first run. Ask a teammate if you don't have one.
+
+### Step 0: Get the project
 
 1. Open your terminal:
    - **macOS**: search for "Terminal" in Spotlight, or find it in Applications → Utilities
@@ -74,16 +84,6 @@ There are **two ways** to run this project from here. **Pick one — you don't n
 ### Option A: Claude Code skills (recommended)
 
 If you have [Claude Code](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) installed, you can run the entire project without touching the terminal yourself. Claude Code has built-in **skills** (slash commands) that handle all the setup and orchestration for you.
-
-### Prerequisites
-
-1. **Terminal access** — you need a terminal app (macOS: Terminal.app or iTerm2; Windows: PowerShell or Windows Terminal). If you've never used one, [watch this 2-min intro](https://www.youtube.com/watch?v=aKRYQsKR46I).
-2. **Xcode Command Line Tools** (macOS only) — required before anything else. Open Terminal and run: `xcode-select --install`. Click "Install" in the popup and wait for it to finish. This gives you git, compilers, and other dev essentials. *(Windows users: skip this step.)*
-3. **Claude Code** installed and working (`claude` command available in your terminal). Follow the [claudegate getting started guide](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) — **VPN required** for installation and GitHub setup.
-4. **Python 3.11+** — [download here](https://www.python.org/downloads/) if not installed. Check with `python3 --version` (macOS) or `python --version` (Windows).
-5. **Node.js 18+** — [download here](https://nodejs.org/) if not installed. Check with `node --version`.
-6. **Homebrew** (macOS only) — needed for installing dependencies. Install with `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` if not installed. *(Windows users: skip this step — Python and Node installers handle everything.)*
-7. **Anthropic API key** — the skill will ask for this on first run. Ask a teammate if you don't have one.
 
 ### How to use it
 
