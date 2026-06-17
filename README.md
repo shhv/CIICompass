@@ -42,7 +42,6 @@ Tech under the hood:
 4. **Python 3.11+** — [download here](https://www.python.org/downloads/) if not installed. Check with `python3 --version` (macOS) or `python --version` (Windows).
 5. **Node.js 18+** — [download here](https://nodejs.org/) if not installed. Check with `node --version`.
 6. **Homebrew** (macOS only) — needed for installing dependencies. Install with `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` if not installed. *(Windows users: skip this step — Python and Node installers handle everything.)*
-7. **Anthropic API key** — the skill will ask for this on first run. Ask a teammate if you don't have one.
 
 ### Step 0: Get the project
 
