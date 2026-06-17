@@ -64,7 +64,7 @@ If you have [Claude Code](https://docs.anthropic.com/en/docs/claude-code) instal
 |------|---------|--------------|
 | 1 | `/run-cii-dev` | Starts the backend, frontend, and Cloudflare tunnel all at once. Wait until Claude reports all three are healthy. |
 | 2 | `/reindex` | Crawls docs.oort.io and loads the content into the search index. Run this the first time, or whenever docs are updated. |
-| 3 | `/restart-webex-webhook` | Restarts the Cloudflare tunnel and re-registers the Webex bot webhook. Use this if the bot stops responding in Webex. To chat with the bot, search for **CIIcompass** in Webex. |
+| 3 | `/start-webex-webhook` | Restarts the Cloudflare tunnel and re-registers the Webex bot webhook. Use this if the bot stops responding in Webex. To chat with the bot, search for **CIIcompass** in Webex. |
 
 ### Typical first-time flow
 
@@ -79,7 +79,7 @@ After that, open **http://localhost:5173** in your browser to chat with the assi
 
 - **First-time users**: always run `/reindex` after `/run-cii-dev` to populate the doc index — the assistant can't answer questions without it.
 - `/reindex` needs the backend to be running first — always run `/run-cii-dev` before `/reindex`.
-- If the Webex bot stops responding, run `/restart-webex-webhook` to get a fresh tunnel URL and webhook.
+- If the Webex bot stops responding, run `/start-webex-webhook` to get a fresh tunnel URL and webhook.
 - To stop everything, press **Ctrl+C** in the Claude Code session.
 - You don't need to understand Python, Node.js, or any of the backend code — the skills handle it all.
 
@@ -202,7 +202,7 @@ curl -X DELETE -H "Authorization: Bearer $WEBEX_BOT_TOKEN" \
   https://webexapis.com/v1/webhooks/<webhook-id>
 ```
 
-Or just run `/restart-webex-webhook` in Claude Code to handle all of this automatically.
+Or just run `/start-webex-webhook` in Claude Code to handle all of this automatically.
 
 ### 4. Test
 

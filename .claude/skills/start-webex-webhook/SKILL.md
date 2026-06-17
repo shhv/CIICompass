@@ -1,6 +1,6 @@
 ---
-name: restart-webex-webhook
-description: Restart the Cloudflare tunnel for the Webex bot, capture the new trycloudflare URL, delete all stale Webex webhooks, and register a fresh one pointing at the new tunnel. Use when the user asks to restart, refresh, or re-register the Webex webhook / tunnel, or when the bot stops receiving messages after a tunnel restart.
+name: start-webex-webhook
+description: Start the Cloudflare tunnel for the Webex bot, capture the trycloudflare URL, delete all stale Webex webhooks, and register a fresh one pointing at the new tunnel. Use when the user asks to start, restart, refresh, or re-register the Webex webhook / tunnel, or when the bot stops receiving messages after a tunnel restart.
 ---
 
 # Restart the Webex webhook + Cloudflare tunnel
