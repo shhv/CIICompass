@@ -1,6 +1,6 @@
 # CII Assistant
 
-Agentic AI assistant for CII documentation at https://docs.oort.io.
+An AI agent that turns hours of doc searching into seconds — grounded answers with citations, delivered in Webex or the browser.
 
 ## Problem Statement
 
