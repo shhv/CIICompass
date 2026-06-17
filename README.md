@@ -36,15 +36,22 @@ Tech under the hood:
 
 ### Step 0: Get the project (do this first)
 
-1. Open **Terminal** (macOS: search for "Terminal" in Spotlight, or find it in Applications → Utilities).
+1. Open your terminal:
+   - **macOS**: search for "Terminal" in Spotlight, or find it in Applications → Utilities
+   - **Windows**: open PowerShell or Windows Terminal
 2. Download the project:
    - Go to the [GitHub repo](https://github.com/shhv_cisco/cii-assistant/tree/haiku-fallback-routing)
-   - Click the green **Code** button → **Download ZIP**
-   - Unzip the file (double-click it on macOS)
-3. In Terminal, navigate into the unzipped folder:
-   ```bash
-   cd ~/Downloads/cii-assistant-haiku-fallback-routing
-   ```
+   - Click the **Code** button → **Download ZIP**
+   - Unzip the file (double-click on macOS, right-click → "Extract All" on Windows)
+3. In your terminal, navigate into the unzipped folder:
+   - **macOS**:
+     ```bash
+     cd ~/Downloads/cii-assistant-haiku-fallback-routing
+     ```
+   - **Windows**:
+     ```powershell
+     cd $HOME\Downloads\cii-assistant-haiku-fallback-routing
+     ```
 4. Start Claude Code:
    ```bash
    claude
@@ -71,11 +78,11 @@ If you have [Claude Code](https://wwwin-github.cisco.com/netascode/claudegate/bl
 ### Prerequisites
 
 1. **Terminal access** — you need a terminal app (macOS: Terminal.app or iTerm2; Windows: PowerShell or Windows Terminal). If you've never used one, [watch this 2-min intro](https://www.youtube.com/watch?v=aKRYQsKR46I).
-2. **Xcode Command Line Tools** (macOS) — required before anything else. Open Terminal and run: `xcode-select --install`. Click "Install" in the popup and wait for it to finish. This gives you git, compilers, and other dev essentials.
+2. **Xcode Command Line Tools** (macOS only) — required before anything else. Open Terminal and run: `xcode-select --install`. Click "Install" in the popup and wait for it to finish. This gives you git, compilers, and other dev essentials. *(Windows users: skip this step.)*
 3. **Claude Code** installed and working (`claude` command available in your terminal). Follow the [claudegate getting started guide](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) — **VPN required** for installation and GitHub setup.
-4. **Python 3.11+** — [download here](https://www.python.org/downloads/) if not installed. Check with `python3 --version`.
+4. **Python 3.11+** — [download here](https://www.python.org/downloads/) if not installed. Check with `python3 --version` (macOS) or `python --version` (Windows).
 5. **Node.js 18+** — [download here](https://nodejs.org/) if not installed. Check with `node --version`.
-6. **Homebrew** (macOS only) — needed for installing dependencies. Install with `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` if not installed.
+6. **Homebrew** (macOS only) — needed for installing dependencies. Install with `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` if not installed. *(Windows users: skip this step — Python and Node installers handle everything.)*
 7. **Anthropic API key** — the skill will ask for this on first run. Ask a teammate if you don't have one.
 
 ### How to use it
