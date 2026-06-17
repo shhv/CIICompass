@@ -51,8 +51,10 @@ If you have [Claude Code](https://docs.anthropic.com/en/docs/claude-code) instal
 ### Prerequisites
 
 1. **Claude Code** installed and working (`claude` command available in your terminal).
-2. A `.env` file in the `backend/` folder with your API keys filled in (copy `backend/.env.example` and add your keys — ask a teammate if you're unsure which keys to use).
-3. **Python 3.11+** and **Node.js 18+** installed on your machine.
+2. **Python 3.11+** — [download here](https://www.python.org/downloads/) if not installed. Check with `python3 --version`.
+3. **Node.js 18+** — [download here](https://nodejs.org/) if not installed. Check with `node --version`.
+4. **Homebrew** (macOS only) — needed for installing dependencies. Install with `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` if not installed.
+5. **Anthropic API key** — the skill will ask for this on first run. Ask a teammate if you don't have one.
 
 ### How to use it
 
@@ -62,15 +64,16 @@ If you have [Claude Code](https://docs.anthropic.com/en/docs/claude-code) instal
 
 | Step | Command | What it does |
 |------|---------|--------------|
-| 1 | `/run-cii-dev` | Starts the backend, frontend, and Cloudflare tunnel all at once. Wait until Claude reports all three are healthy. |
+| 1 | `/run-cii-dev` | Starts the backend and frontend. Wait until Claude reports both are healthy. |
 | 2 | `/reindex` | Crawls docs.oort.io and loads the content into the search index. Run this the first time, or whenever docs are updated. |
-| 3 | `/start-webex-webhook` | Restarts the Cloudflare tunnel and re-registers the Webex bot webhook. Use this if the bot stops responding in Webex. To chat with the bot, search for **CIIcompass** in Webex. |
+| 3 | `/start-webex-webhook` | Installs cloudflared if needed, starts the Cloudflare tunnel, and registers the Webex bot webhook. To chat with the bot, search for **CIIcompass** in Webex. |
 
 ### Typical first-time flow
 
 ```
-/run-cii-dev          ← boots the whole stack
+/run-cii-dev          ← starts backend + frontend
 /reindex              ← populates the doc index (takes a few minutes)
+/start-webex-webhook  ← sets up the Webex bot (optional)
 ```
 
 After that, open **http://localhost:5173** in your browser to chat with the assistant.
