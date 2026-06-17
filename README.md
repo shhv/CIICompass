@@ -46,14 +46,12 @@ Tech under the hood:
 
 ### Step 0: Get the project
 
-1. Open your terminal:
+1. From this same repository page, click the **Code** button → **Download ZIP**.
+2. Unzip the downloaded file (double-click on macOS, right-click → "Extract All" on Windows). Note the folder name it creates in your Downloads folder.
+3. Open your terminal:
    - **macOS**: search for "Terminal" in Spotlight, or find it in Applications → Utilities
    - **Windows**: open PowerShell or Windows Terminal
-2. Download the project:
-   - Go to the [GitHub repo](https://github.com/shhv_cisco/cii-assistant/tree/haiku-fallback-routing)
-   - Click the **Code** button → **Download ZIP**
-   - Unzip the file (double-click on macOS, right-click → "Extract All" on Windows)
-3. In your terminal, navigate into the unzipped folder:
+4. Navigate into the unzipped folder. Replace the folder name below with whatever is actually on your disk (it may include the branch name, e.g. `cii-assistant-haiku-fallback-routing`):
    - **macOS**:
      ```bash
      cd ~/Downloads/cii-assistant-haiku-fallback-routing
@@ -62,7 +60,8 @@ Tech under the hood:
      ```powershell
      cd $HOME\Downloads\cii-assistant-haiku-fallback-routing
      ```
-4. Start Claude Code:
+   > **Tip:** If you're not sure of the exact folder name, check your Downloads folder and match the `cd` command to what you see there.
+5. Start Claude Code:
    ```bash
    claude
    ```
@@ -91,9 +90,11 @@ Type the following commands **in the Claude Code prompt** (not your regular term
 
 | Step | Command | What it does |
 |------|---------|--------------|
-| 1 | `/run-cii-dev` | Starts the backend and frontend. Wait until Claude reports both are healthy. |
-| 2 | `/reindex` | Crawls docs.oort.io and loads the content into the search index. Run this the first time, or whenever docs are updated. |
-| 3 | `/start-webex-webhook` | Installs cloudflared if needed, starts the Cloudflare tunnel, and registers the Webex bot webhook. To chat with the bot, search for **CIIcompass** in Webex. |
+| 1 (required) | `/run-cii-dev` | Starts the backend and frontend. Wait until Claude reports both are healthy. |
+| 2 (required) | `/reindex` | Crawls docs.oort.io and loads the content into the search index. Run this the first time, or whenever docs are updated. |
+| 3 (optional) | `/start-webex-webhook` | Installs cloudflared if needed, starts the Cloudflare tunnel, and registers the Webex bot webhook. Only needed if you want to use the Webex bot. To chat with the bot, search for **CIIcompass** in Webex. |
+
+> **Important:** Claude will ask you to approve commands as it runs (e.g. installing dependencies, starting servers). Read the prompts on screen and press **Enter** or type **y** to approve. Don't walk away after typing the skill command. Stay and follow along until Claude confirms everything is up and running.
 
 ### Typical first-time flow
 
