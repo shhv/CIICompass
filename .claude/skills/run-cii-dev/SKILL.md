@@ -58,8 +58,8 @@ If `backend/.env` is **MISSING**, help the user create it:
    The user only needs to provide **one key**:
    - `ANTHROPIC_API_KEY` — their Anthropic API key (or claudegate proxy key)
 3. Ask the user: "I need your Anthropic API key to set up the .env file. Please paste it here."
-4. Once they provide it, use the Edit tool to replace `sk-cg-replace-me` with their
-   actual key in `backend/.env`.
+4. Once they provide it, use the Edit tool to set the `ANTHROPIC_API_KEY=` value
+   in `backend/.env` to their actual key.
 5. Confirm: "Your .env is ready — all other settings have sensible defaults."
 
 **Do NOT ask for any other keys** — the Webex bot token, webhook secret, and all other
