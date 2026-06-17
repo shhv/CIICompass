@@ -5,9 +5,9 @@ import { Sidebar } from "./components/Sidebar";
 export default function App() {
   const [open, setOpen] = useState<boolean>(() => {
     try {
-      return localStorage.getItem("cii.sidebar") !== "0";
+      return localStorage.getItem("cii.sidebar") === "1";
     } catch {
-      return true;
+      return false;
     }
   });
   const [clearChat, setClearChat] = useState<(() => void) | null>(null);
