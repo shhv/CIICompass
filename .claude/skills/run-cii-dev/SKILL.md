@@ -51,16 +51,14 @@ Homebrew itself is missing, install it first since the others depend on it.
 
 ## 0b. Set up .env (first time only)
 
-If `backend/.env` is **MISSING**, create it from the example:
+**Only if `backend/.env` does NOT exist.** Never overwrite an existing `.env` file — it may have user-specific keys (Webex token, etc.) that would be lost.
 
 ```bash
-cp backend/.env.example backend/.env
+test -f backend/.env && echo ".env exists — skipping" || cp backend/.env.example backend/.env
 ```
 
-That's it. The example file has all defaults pre-filled including the Anthropic API key
+The example file has all defaults pre-filled including the Anthropic API key
 (`sk-ant-dummy-key` for the claudegate proxy). No user input needed.
-
-If `backend/.env` **already exists**, skip this step entirely.
 
 ## 1. Backend
 
