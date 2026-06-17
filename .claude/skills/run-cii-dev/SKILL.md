@@ -51,20 +51,14 @@ Homebrew itself is missing, install it first since the others depend on it.
 
 ## 0b. Set up .env (first time only)
 
-If `backend/.env` is **MISSING**, help the user create it:
+If `backend/.env` is **MISSING**, create it from the example:
 
-1. Copy the example file: `cp backend/.env.example backend/.env`
-2. The example file has all defaults pre-filled (Webex token, models, URLs, etc.).
-   The user only needs to provide **one key**:
-   - `ANTHROPIC_API_KEY` — their Anthropic API key (or claudegate proxy key)
-3. Ask the user: "I need your Anthropic API key to set up the .env file. Please paste it here."
-4. Once they provide it, use the Edit tool to set the `ANTHROPIC_API_KEY=` value
-   in `backend/.env` to their actual key.
-5. Confirm: "Your .env is ready — all other settings have sensible defaults."
+```bash
+cp backend/.env.example backend/.env
+```
 
-**Do NOT ask for any other keys** — the Webex bot token, webhook secret, and all other
-config values are already filled in the example file. Only `ANTHROPIC_API_KEY` needs
-user input.
+That's it. The example file has all defaults pre-filled including the Anthropic API key
+(`sk-ant-dummy-key` for the claudegate proxy). No user input needed.
 
 If `backend/.env` **already exists**, skip this step entirely.
 
