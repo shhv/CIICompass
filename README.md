@@ -1,5 +1,7 @@
 # CII Assistant
 
+[**Watch the demo**](https://app.vidcast.io/share/2923351e-e82f-44ea-8726-05ebfeef5a63)
+
 An AI agent that turns hours of doc searching into seconds with grounded answers, citations, and delivery right in Webex or the browser.
 
 ## Problem Statement
@@ -285,10 +287,6 @@ Embed the agent directly into the CII product dashboard as a premium customer-fa
 - **CSAT lift** — customers prefer instant self-service over waiting in a support queue
 
 > The tech is identical across all three phases — the only difference is where it runs and who's asking the question.
-
-## Demo
-
-[Watch how it works](https://app.vidcast.io/share/2923351e-e82f-44ea-8726-05ebfeef5a63)
 
 ## Summary
 
