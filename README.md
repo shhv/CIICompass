@@ -36,90 +36,15 @@ Tech under the hood:
 
 ## Setup & Run
 
-### Prerequisites
-
-1. **Terminal access** — you need a terminal app (macOS: Terminal.app or iTerm2; Windows: PowerShell or Windows Terminal). If you've never used one, [watch this 2-min intro](https://www.youtube.com/watch?v=aKRYQsKR46I).
-2. **Xcode Command Line Tools** (macOS only) — required before anything else. Open Terminal and run: `xcode-select --install`. Click "Install" in the popup and wait for it to finish. This gives you git, compilers, and other dev essentials. *(Windows users: skip this step.)*
-3. **Claude Code** installed and working (`claude` command available in your terminal). Follow the [claudegate getting started guide](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) — **VPN required** for installation and GitHub setup.
-4. **Homebrew** (macOS only) — needed for installing dependencies. Install with `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` if not installed. *(Windows users: skip this step — Python and Node installers handle everything.)*
-5. **Python 3.11+** — install with `brew install python@3.11` (macOS) or [download here](https://www.python.org/downloads/) (Windows). Check with `python3 --version`.
-6. **Node.js 18+** — install with `brew install node` (macOS) or [download here](https://nodejs.org/) (Windows). Check with `node --version`.
-
-### Step 0: Get the project
-
-1. From this same repository page, click the **Code** button → **Download ZIP**.
-2. Unzip the downloaded file (double-click on macOS, right-click → "Extract All" on Windows). Note the folder name it creates in your Downloads folder.
-3. Open your terminal:
-   - **macOS**: search for "Terminal" in Spotlight, or find it in Applications → Utilities
-   - **Windows**: open PowerShell or Windows Terminal
-4. Navigate into the unzipped folder. Replace the folder name below with whatever is actually on your disk (it may include the branch name, e.g. `cii-assistant-haiku-fallback-routing`):
-   - **macOS**:
-     ```bash
-     cd ~/Downloads/cii-assistant-haiku-fallback-routing
-     ```
-   - **Windows**:
-     ```powershell
-     cd $HOME\Downloads\cii-assistant-haiku-fallback-routing
-     ```
-   > **Tip:** If you're not sure of the exact folder name, check your Downloads folder and match the `cd` command to what you see there.
-5. Start Claude Code:
-   ```bash
-   claude
-   ```
-
-You're now inside Claude Code and ready to use the skills below.
-
----
-
-There are **two ways** to run this project from here. **Pick one — you don't need both.**
-
-| | Option A: Claude Code skills | Option B: CLI commands |
-|--|------|------|
-| **For** | Non-coders, CSEs, CSSs, anyone who just wants it running | Developers who want manual control |
-| **How** | Type slash commands in Claude Code | Run terminal commands yourself |
-| **Setup time** | ~2 minutes | ~10 minutes |
-
----
-
-### Option A: Claude Code skills (recommended)
-
-If you have [Claude Code](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) installed, you can run the entire project without touching the terminal yourself. Claude Code has built-in **skills** (slash commands) that handle all the setup and orchestration for you.
-
-### How to use it
-
-Type the following commands **in the Claude Code prompt** (not your regular terminal):
-
-| | Command | What it does |
-|--|---------|--------------|
-| 🟢 Required | `/run-cii-dev` | Starts backend and frontend. Wait until Claude confirms both are healthy. |
-| 🟢 Required | `/reindex` | Populates the search index from docs.oort.io. Run on first use or after docs update. |
-| ⚪ Optional | `/start-webex-webhook` | Sets up the Webex bot tunnel and webhook. Search **CIIcompass** in Webex to find the bot (displays as **CII AI Assistant**). |
-
-> **Important:** Claude will ask you to approve commands as it runs (e.g. installing dependencies, starting servers). Read the prompts on screen and press **Enter** or type **y** to approve. Don't walk away after typing the skill command. Stay and follow along until Claude confirms everything is up and running.
-
-### Typical first-time flow
+Requires [Claude Code](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) (VPN required for install). Then in the Claude Code prompt:
 
 ```
-/run-cii-dev          ← starts backend + frontend
-/reindex              ← populates the doc index (takes a few minutes)
-/start-webex-webhook  ← sets up the Webex bot (optional)
+/run-cii-dev          ← boots backend + frontend
+/reindex              ← populates the doc index (first time only)
+/start-webex-webhook  ← enables the Webex bot (optional)
 ```
 
-After that, open **http://localhost:5173** in your browser to chat with the assistant.
-
-### Tips
-
-- **First-time users**: always run `/reindex` after `/run-cii-dev` to populate the doc index — the assistant can't answer questions without it.
-- `/reindex` needs the backend to be running first — always run `/run-cii-dev` before `/reindex`.
-- If the Webex bot stops responding, run `/start-webex-webhook` to get a fresh tunnel URL and webhook.
-- To stop everything, press **Ctrl+C** in the Claude Code session.
-- You don't need to understand Python, Node.js, or any of the backend code — the skills handle it all.
-
----
-
-### Option B: CLI commands (for developers)
-
-See [SETUP.md](SETUP.md) for manual setup instructions if you prefer running things yourself.
+Open **http://localhost:5173** to start chatting. Full setup details (prerequisites, manual CLI commands): [SETUP.md](SETUP.md)
 
 ## Key Outcomes
 

@@ -1,6 +1,48 @@
-# Manual Setup (CLI commands)
+# Setup Guide
 
-If you prefer running things manually or need more control, use these commands instead. **Skip this if you already used Option A (Claude Code skills) from the main README.**
+## Prerequisites
+
+1. **Terminal access** — macOS: Terminal.app or iTerm2; Windows: PowerShell or Windows Terminal. [2-min intro](https://www.youtube.com/watch?v=aKRYQsKR46I) if you've never used one.
+2. **Xcode Command Line Tools** (macOS only) — run `xcode-select --install`.
+3. **Claude Code** — follow the [claudegate getting started guide](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) (VPN required).
+4. **Homebrew** (macOS only) — `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+5. **Python 3.11+** — `brew install python@3.11` (macOS) or [download](https://www.python.org/downloads/) (Windows).
+6. **Node.js 18+** — `brew install node` (macOS) or [download](https://nodejs.org/) (Windows).
+
+## Get the project
+
+1. Click **Code** → **Download ZIP** from this repo page.
+2. Unzip (double-click on macOS, right-click → "Extract All" on Windows).
+3. Open a terminal and navigate into the folder:
+   ```bash
+   cd ~/Downloads/cii-assistant-haiku-fallback-routing
+   ```
+4. Start Claude Code:
+   ```bash
+   claude
+   ```
+
+## Option A: Claude Code skills (recommended)
+
+Type these in the Claude Code prompt:
+
+| | Command | What it does |
+|--|---------|--------------|
+| 🟢 Required | `/run-cii-dev` | Starts backend and frontend |
+| 🟢 Required | `/reindex` | Populates the search index from docs.oort.io |
+| ⚪ Optional | `/start-webex-webhook` | Sets up the Webex bot tunnel and webhook |
+
+> Claude will ask you to approve commands — press **Enter** or type **y** to approve.
+
+### Tips
+
+- Always run `/reindex` after `/run-cii-dev` on first use.
+- If the Webex bot stops responding, run `/start-webex-webhook` again.
+- To stop everything, press **Ctrl+C**.
+
+---
+
+## Option B: Manual CLI commands
 
 ## Backend
 
