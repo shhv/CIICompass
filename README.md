@@ -2,7 +2,9 @@
 
 An AI agent that turns hours of doc searching into seconds with grounded answers, citations, and delivery right in Webex or the browser.
 
-[![▶ See it in action](https://img.shields.io/badge/▶_See_it_in_action-Vidcast-00bceb?style=for-the-badge)](https://app.vidcast.io/share/2923351e-e82f-44ea-8726-05ebfeef5a63)
+<a href="https://app.vidcast.io/share/2923351e-e82f-44ea-8726-05ebfeef5a63">
+  <img src="https://img.shields.io/badge/▶_See_it_in_action-Vidcast-00bceb?style=for-the-badge" height="36" />
+</a>
 
 ## Problem Statement
 
