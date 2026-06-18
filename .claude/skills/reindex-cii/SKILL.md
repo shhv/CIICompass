@@ -1,14 +1,14 @@
 ---
-name: reindex
-description: Trigger the docs.oort.io re-index against a running CII Assistant backend, poll progress, and surface failures. Use when the user asks to reindex, refresh docs, populate the empty index, or investigate why the agent is answering "I have no docs."
+name: reindex-cii
+description: Trigger a CII docs re-index (docs.oort.io) against the running backend, poll progress, and surface failures. Use when the CII index is empty or stale.
 ---
 
-# Trigger and monitor an ingest run
+# Trigger and monitor a CII ingest run
 
 ## When to use
 
-- `GET /api/status` shows `pages: 0` (empty index).
-- The agent is answering "the docs don't cover this" for clearly-documented topics.
+- `GET /api/status?product=cii` shows `pages: 0` (empty index).
+- The agent is answering "the docs don't cover this" for clearly-documented CII topics.
 - After a code change to the crawler, chunker, or embedder.
 - After a `docs.oort.io` content change you want indexed *now* (otherwise wait for the daily 01:00 scheduler).
 
@@ -18,7 +18,7 @@ description: Trigger the docs.oort.io re-index against a running CII Assistant b
 # Backend reachable?
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/health
 # Is there already a job running?
-curl -s http://localhost:8000/api/status | python3 -c "
+curl -s "http://localhost:8000/api/status?product=cii" | python3 -c "
 import sys, json
 print(json.load(sys.stdin)['job']['status'])
 "
@@ -34,7 +34,7 @@ Incremental (only re-embeds changed pages — fast, the default):
 ```bash
 curl -s -X POST http://localhost:8000/api/ingest \
   -H 'content-type: application/json' \
-  -d '{"force":false}' | python3 -m json.tool
+  -d '{"force":false,"product":"cii"}' | python3 -m json.tool
 ```
 
 Full re-embed (use after a chunker/embedder change):
@@ -42,14 +42,14 @@ Full re-embed (use after a chunker/embedder change):
 ```bash
 curl -s -X POST http://localhost:8000/api/ingest \
   -H 'content-type: application/json' \
-  -d '{"force":true}' | python3 -m json.tool
+  -d '{"force":true,"product":"cii"}' | python3 -m json.tool
 ```
 
 ## Watch progress
 
 ```bash
 while true; do
-  curl -s http://localhost:8000/api/status | python3 -c "
+  curl -s "http://localhost:8000/api/status?product=cii" | python3 -c "
 import sys, json
 d = json.load(sys.stdin)['job']
 p = d.get('progress', {})
@@ -81,5 +81,5 @@ Expected phase transitions: `discovering → fetching → indexing → done`.
 
 ## After a successful run
 
-`GET /api/status` should show `collection_size` and `pages` jumping. The
+`GET /api/status?product=cii` should show `collection_size` and `pages` jumping. The
 QA cache is auto-cleared on success so stale answers don't linger.

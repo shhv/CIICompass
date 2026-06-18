@@ -40,6 +40,18 @@ def content_hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def _same_base(url: str, base: str) -> bool:
+    """Check if url starts with the base URL (host + path prefix)."""
+    u = urlparse(url)
+    b = urlparse(base)
+    if u.netloc != b.netloc:
+        return False
+    base_path = b.path.rstrip("/")
+    if not base_path:
+        return True
+    return u.path == base_path or u.path.startswith(base_path + "/")
+
+
 def same_host(url: str, base: str) -> bool:
     return urlparse(url).netloc == urlparse(base).netloc
 
@@ -239,7 +251,7 @@ async def crawl_all(base_url: str | None = None) -> list[FetchedPage]:
 
     async with httpx.AsyncClient(headers=headers, follow_redirects=True) as client:
         urls = await discover_urls(client, base)
-        urls = sorted(set(u for u in urls if same_host(u, base)))
+        urls = sorted(set(u for u in urls if _same_base(u, base)))
         logger.info("discovered %d urls", len(urls))
         from . import progress as _p
         _p.set_discovered(len(urls))

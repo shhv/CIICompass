@@ -92,7 +92,8 @@ Type the following commands **in the Claude Code prompt** (not your regular term
 | | Command | What it does |
 |--|---------|--------------|
 | 🟢 Required | `/run-cii-dev` | Starts backend and frontend. Wait until Claude confirms both are healthy. |
-| 🟢 Required | `/reindex` | Populates the search index from docs.oort.io. Run on first use or after docs update. |
+| 🟢 Required | `/reindex-cii` | Populates the CII search index from docs.oort.io. Run on first use or after docs update. |
+| 🟢 Required | `/reindex-duo` | Populates the Duo search index from duo.com/docs. Run on first use or after docs update. |
 | ⚪ Optional | `/start-webex-webhook` | Sets up the Webex bot tunnel and webhook. Search **CIIcompass** in Webex to find the bot (displays as **CII AI Assistant**). |
 
 > **Important:** Claude will ask you to approve commands as it runs (e.g. installing dependencies, starting servers). Read the prompts on screen and press **Enter** or type **y** to approve. Don't walk away after typing the skill command. Stay and follow along until Claude confirms everything is up and running.

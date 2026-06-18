@@ -28,7 +28,7 @@ PRODUCTS: dict[str, ProductConfig] = {
         key="duo",
         display_name="Duo",
         collection_name="duo_docs",
-        base_urls=["https://duo.com/docs", "https://help.duo.com", "https://duo.com/blog"],
+        base_urls=["https://duo.com/docs", "https://duo.com/blog", "https://help.duo.com"],
         allowed_domains=["duo.com", "help.duo.com"],
     ),
 }
