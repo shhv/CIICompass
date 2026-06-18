@@ -102,7 +102,8 @@ Type the following commands **in the Claude Code prompt** (not your regular term
 
 ```
 /run-cii-dev          ← starts backend + frontend
-/reindex              ← populates the doc index (takes a few minutes)
+/reindex-cii          ← populates the CII doc index (takes a few minutes)
+/reindex-duo          ← populates the Duo doc index (takes a few minutes)
 /start-webex-webhook  ← sets up the Webex bot (optional)
 ```
 
@@ -110,8 +111,8 @@ After that, open **http://localhost:5173** in your browser to chat with the assi
 
 ### Tips
 
-- **First-time users**: always run `/reindex` after `/run-cii-dev` to populate the doc index — the assistant can't answer questions without it.
-- `/reindex` needs the backend to be running first — always run `/run-cii-dev` before `/reindex`.
+- **First-time users**: always run `/reindex-cii` and/or `/reindex-duo` after `/run-cii-dev` to populate the doc indexes — the assistant can't answer questions without them.
+- `/reindex-cii` and `/reindex-duo` need the backend to be running first — always run `/run-cii-dev` before reindexing.
 - If the Webex bot stops responding, run `/start-webex-webhook` to get a fresh tunnel URL and webhook.
 - To stop everything, press **Ctrl+C** in the Claude Code session.
 - You don't need to understand Python, Node.js, or any of the backend code — the skills handle it all.
