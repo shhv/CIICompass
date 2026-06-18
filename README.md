@@ -288,7 +288,7 @@ Embed the agent directly into the CII product dashboard as a premium customer-fa
 
 ## Demo
 
-[abc](abc)
+[Watch how it works](https://app.vidcast.io/share/2923351e-e82f-44ea-8726-05ebfeef5a63)
 
 ## Summary
 
