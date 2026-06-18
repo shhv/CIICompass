@@ -1,8 +1,8 @@
 # CII Assistant
 
-[![Watch the demo](https://img.shields.io/badge/▶_Watch_Demo-Vidcast-00bceb?style=for-the-badge&logo=webex&logoColor=white)](https://app.vidcast.io/share/2923351e-e82f-44ea-8726-05ebfeef5a63)
-
 An AI agent that turns hours of doc searching into seconds with grounded answers, citations, and delivery right in Webex or the browser.
+
+[![▶ See it in action](https://img.shields.io/badge/▶_See_it_in_action-Vidcast-00bceb?style=for-the-badge&logo=webex&logoColor=white)](https://app.vidcast.io/share/2923351e-e82f-44ea-8726-05ebfeef5a63)
 
 ## Problem Statement
 
