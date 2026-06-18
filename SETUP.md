@@ -4,7 +4,7 @@
 
 1. **Terminal access** — macOS: Terminal.app or iTerm2; Windows: PowerShell or Windows Terminal. [2-min intro](https://www.youtube.com/watch?v=aKRYQsKR46I) if you've never used one.
 2. **Xcode Command Line Tools** (macOS only) — run `xcode-select --install`.
-3. **Claude Code** — follow the [claudegate getting started guide](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) (VPN required).
+3. **Claude Code** — **requires Cisco VPN** for installation and GitHub access. Follow the [claudegate getting started guide](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) to install and authenticate. Once set up, the `claude` command should work in your terminal.
 4. **Homebrew** (macOS only) — `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 5. **Python 3.11+** — `brew install python@3.11` (macOS) or [download](https://www.python.org/downloads/) (Windows).
 6. **Node.js 18+** — `brew install node` (macOS) or [download](https://nodejs.org/) (Windows).

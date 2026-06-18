@@ -36,7 +36,7 @@ Tech under the hood:
 
 ## Setup & Run
 
-Download the ZIP from this repo, unzip, and open [Claude Code](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) in the folder. Then run:
+Download the ZIP from this repo, unzip, and use [Claude Code](SETUP.md#prerequisites) to run the skills:
 
 ```
 /run-cii-dev          ← boots backend + frontend (required)
@@ -46,7 +46,7 @@ Download the ZIP from this repo, unzip, and open [Claude Code](https://wwwin-git
 
 Then open **http://localhost:5173** to start chatting.
 
-> Prerequisites, manual CLI commands, and architecture details: **[SETUP.md](SETUP.md)**
+> First-time setup (Claude Code install, prerequisites, manual CLI commands): **[SETUP.md](SETUP.md)**
 
 ## Key Outcomes
 
