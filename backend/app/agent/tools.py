@@ -7,7 +7,7 @@ import httpx
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
 
-from ..config import get_settings
+from ..config import get_product, get_settings
 from ..rag.retriever import HybridRetriever
 from ..rag.store import ChromaStore
 
@@ -95,9 +95,11 @@ TOOLS: list[dict[str, Any]] = [
 
 
 class ToolExecutor:
-    def __init__(self) -> None:
-        self.retriever = HybridRetriever()
-        self.store = ChromaStore()
+    def __init__(self, product: str = "cii") -> None:
+        self.product_cfg = get_product(product)
+        store = ChromaStore(collection_name=self.product_cfg.collection_name)
+        self.retriever = HybridRetriever(store=store)
+        self.store = store
 
     async def run(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         if name == "search_docs":
@@ -135,8 +137,10 @@ class ToolExecutor:
 
     async def _fetch_page(self, url: str) -> dict[str, Any]:
         settings = get_settings()
-        if "docs.oort.io" not in url:
-            return {"error": "only docs.oort.io URLs are allowed"}
+        from urllib.parse import urlparse
+        domain = urlparse(url).netloc
+        if not any(domain.endswith(d) for d in self.product_cfg.allowed_domains):
+            return {"error": f"only {self.product_cfg.allowed_domains} URLs are allowed"}
         headers = {"User-Agent": settings.user_agent}
         async with httpx.AsyncClient(headers=headers, follow_redirects=True) as client:
             try:

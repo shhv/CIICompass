@@ -11,11 +11,15 @@ type UIMessage = ChatMessage & {
   timestamp?: number; // ms since epoch; persisted in localStorage alongside message content
 };
 
-const HISTORY_KEY = "cii.chatHistory";
+const HISTORY_KEY_PREFIX = "cii.chatHistory";
 
-function loadHistory(): UIMessage[] {
+function historyKey(product: string): string {
+  return product === "cii" ? HISTORY_KEY_PREFIX : `${HISTORY_KEY_PREFIX}.${product}`;
+}
+
+function loadHistory(product: string): UIMessage[] {
   try {
-    const raw = localStorage.getItem(HISTORY_KEY);
+    const raw = localStorage.getItem(historyKey(product));
     if (!raw) return [];
     const parsed = JSON.parse(raw) as UIMessage[];
     return parsed.map((m) => (m.pending ? { ...m, pending: false } : m));
@@ -24,35 +28,39 @@ function loadHistory(): UIMessage[] {
   }
 }
 
-function saveHistory(msgs: UIMessage[]) {
+function saveHistory(msgs: UIMessage[], product: string) {
   try {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(msgs.filter((m) => !m.pending)));
+    localStorage.setItem(historyKey(product), JSON.stringify(msgs.filter((m) => !m.pending)));
   } catch {
     // Quota exceeded or private mode — fail silently
   }
 }
 
-export function ChatWindow({ onClearReady }: { onClearReady?: (fn: () => void) => void }) {
-  const [messages, setMessages] = useState<UIMessage[]>(loadHistory);
+export function ChatWindow({ onClearReady, product }: { onClearReady?: (fn: () => void) => void; product: "cii" | "duo" }) {
+  const [messages, setMessages] = useState<UIMessage[]>(() => loadHistory(product));
   const [busy, setBusy] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMessages(loadHistory(product));
+  }, [product]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
-    saveHistory(messages);
-  }, [messages]);
+    saveHistory(messages, product);
+  }, [messages, product]);
 
   useEffect(() => {
     if (!onClearReady) return;
     onClearReady(() => {
-      localStorage.removeItem(HISTORY_KEY);
+      localStorage.removeItem(historyKey(product));
       setMessages([]);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [product]);
 
   const send = async (text: string) => {
     // Stamp both messages at send time so timestamps survive localStorage round-trips
@@ -99,7 +107,7 @@ export function ChatWindow({ onClearReady }: { onClearReady?: (fn: () => void) =
     };
 
     try {
-      await streamChat(history, onEvent);
+      await streamChat(history, onEvent, undefined, product);
     } catch (e: any) {
       update((m) => ({ ...m, content: (m.content || "") + `\n\n_Error: ${e?.message || e}_`, pending: false }));
     } finally {
@@ -113,9 +121,13 @@ export function ChatWindow({ onClearReady }: { onClearReady?: (fn: () => void) =
         <div className="max-w-4xl mx-auto py-6">
           {messages.length === 0 && (
             <div className="text-center text-slate-500 mt-16">
-              <div className="text-3xl font-semibold mb-3 text-slate-800">CII Assistant</div>
+              <div className="text-3xl font-semibold mb-3 text-slate-800">
+                Security DocPilot
+              </div>
               <div className="text-base">
-                Ask anything about the CII platform — config, APIs, releases, troubleshooting.
+                {product === "duo"
+                  ? "Ask anything about Duo Security — MFA, admin panel, integrations, troubleshooting."
+                  : "Ask anything about the CII platform — config, APIs, releases, troubleshooting."}
               </div>
             </div>
           )}

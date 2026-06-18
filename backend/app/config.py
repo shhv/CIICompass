@@ -1,8 +1,43 @@
+from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+@dataclass
+class ProductConfig:
+    key: str
+    display_name: str
+    collection_name: str
+    base_urls: list[str]
+    allowed_domains: list[str]
+    github_repos: list[str] = field(default_factory=list)
+
+
+PRODUCTS: dict[str, ProductConfig] = {
+    "cii": ProductConfig(
+        key="cii",
+        display_name="CII",
+        collection_name="cii_docs",
+        base_urls=["https://docs.oort.io"],
+        allowed_domains=["docs.oort.io"],
+    ),
+    "duo": ProductConfig(
+        key="duo",
+        display_name="Duo",
+        collection_name="duo_docs",
+        base_urls=["https://duo.com/docs", "https://help.duo.com", "https://duo.com/blog"],
+        allowed_domains=["duo.com", "help.duo.com"],
+    ),
+}
+
+
+def get_product(product: str) -> ProductConfig:
+    if product not in PRODUCTS:
+        raise ValueError(f"Unknown product: {product}")
+    return PRODUCTS[product]
 
 
 class Settings(BaseSettings):

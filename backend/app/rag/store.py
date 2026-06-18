@@ -18,14 +18,15 @@ class StoredChunk:
 
 
 class ChromaStore:
-    def __init__(self) -> None:
+    def __init__(self, collection_name: str | None = None) -> None:
         settings = get_settings()
         self.client = chromadb.PersistentClient(
             path=str(settings.chroma_dir),
             settings=ChromaSettings(anonymized_telemetry=False),
         )
+        name = collection_name or settings.chroma_collection
         self.collection = self.client.get_or_create_collection(
-            name=settings.chroma_collection,
+            name=name,
             metadata={"hnsw:space": "cosine"},
         )
 

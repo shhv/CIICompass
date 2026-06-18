@@ -1,26 +1,27 @@
-# CII Assistant
+# Security DocPilot
 
-An AI agent that turns hours of doc searching into seconds with grounded answers, citations, and delivery right in Webex or the browser.
+An AI agent that turns hours of security doc searching into seconds — grounded answers, citations, and delivery right in Webex or the browser. Supports multiple Cisco security products from a single interface.
 
 ## Problem Statement
 
-**Finding answers in CII docs takes too long.**
+**Finding answers across Cisco security documentation takes too long.**
 
-Cisco Identity Intelligence documentation spans hundreds of pages across a complex, deeply nested site. Engineers, partners, and support teams routinely spend 10-15 minutes hunting for a single answer — jumping between sections, re-reading pages, and often giving up or escalating to a human expert. This wasted time multiplies across every person who touches CII, creating a drag on onboarding, incident response, and customer support.
+Cisco security products — CII (Identity Intelligence) and Duo — each have extensive documentation spanning hundreds of pages across complex, deeply nested sites. Engineers, partners, and support teams routinely spend 10-15 minutes hunting for a single answer — jumping between products, re-reading pages, and often giving up or escalating to a human expert. This wasted time multiplies across every person who touches these products, creating a drag on onboarding, incident response, and customer support.
 
 ## Solution Overview
 
-**An AI agent that reads the docs so your team doesn't have to.**
+**One AI agent that reads the docs for all your security products.**
 
-CII Assistant is a fully agentic RAG system that ingests the entire CII doc site and delivers instant, citation-backed answers. No prompt engineering required — just ask a question in plain English.
+Security DocPilot is a fully agentic RAG system that ingests documentation for multiple Cisco security products (currently CII and Duo) and delivers instant, citation-backed answers from a unified interface. Switch between products with a single click — no need for separate tools or context switching.
 
 Available in two interfaces:
-- **Web chat UI** — open a browser, start asking
+- **Web chat UI** — open a browser, pick your product, start asking
 - **Webex bot (CIIcompass)** — get answers directly in your team space, no context switch
 
 What makes it agentic (not just search):
+- **Multi-product support** — one unified app serves CII and Duo documentation with isolated indexes, tailored prompts, and product-specific crawlers
 - **Multi-step reasoning** — the AI agent decides what to search, reads the results, and fetches additional pages if the first answer is incomplete
-- **Multi-source intelligence** — ingests both the doc site AND GitHub source code, so answers can draw from documentation and implementation
+- **Multi-source intelligence** — ingests both doc sites AND GitHub source code, so answers can draw from documentation and implementation
 - **Heading-aware chunking** — every chunk knows exactly where it sits in the doc hierarchy (e.g. "Admin Guide > Policies > Risk Scoring"), so the model always has structural context
 - **Confidence-aware answers** — retrieval scores are classified as high/medium/low, and the agent calibrates its response accordingly — no low-confidence results presented as fact
 - **Graceful fallback** — when docs don't have the answer, the agent asks clarifying questions instead of hallucinating or saying "I don't know"
@@ -28,7 +29,8 @@ What makes it agentic (not just search):
 - **Self-updating index** — daily incremental re-crawl keeps answers current as docs evolve (only re-embeds pages that actually changed, using content hashing)
 
 Tech under the hood:
-- Sitemap-driven crawler + GitHub repo crawler → heading-aware chunker → Voyage embeddings → ChromaDB
+- Multi-product config: per-product crawl targets, Chroma collections, system prompts, and domain allowlists
+- Sitemap-driven crawler + link-crawl fallback + GitHub repo crawler → heading-aware chunker → Voyage embeddings → ChromaDB
 - Hybrid retrieval: vector search + BM25 reranking (60/40 blend)
 - Claude tool-use loop with adaptive thinking + prompt caching for cost efficiency, streaming answers over SSE
 

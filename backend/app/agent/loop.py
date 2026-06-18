@@ -6,8 +6,8 @@ from typing import Any, AsyncIterator
 
 from anthropic import AsyncAnthropic
 
-from ..config import get_settings
-from .prompts import SYSTEM_PROMPT
+from ..config import get_product, get_settings
+from .prompts import PRODUCT_PROMPTS
 from .router import choose_model
 from .tools import TOOLS, ToolExecutor
 
@@ -17,11 +17,12 @@ MAX_ITERATIONS = 12
 MAX_TOKENS = 4096
 
 
-def _cached_system() -> list[dict[str, Any]]:
+def _cached_system(product: str = "cii") -> list[dict[str, Any]]:
+    prompt = PRODUCT_PROMPTS.get(product, PRODUCT_PROMPTS["cii"])
     return [
         {
             "type": "text",
-            "text": SYSTEM_PROMPT,
+            "text": prompt,
             "cache_control": {"type": "ephemeral"},
         }
     ]
@@ -36,6 +37,7 @@ def _cached_tools() -> list[dict[str, Any]]:
 
 async def run_agent(
     messages: list[dict[str, Any]],
+    product: str = "cii",
 ) -> AsyncIterator[dict[str, Any]]:
     """Run Claude tool-use loop and yield SSE-friendly event dicts.
 
@@ -52,7 +54,7 @@ async def run_agent(
         api_key=settings.anthropic_api_key,
         base_url=settings.anthropic_base_url,
     )
-    executor = ToolExecutor()
+    executor = ToolExecutor(product=product)
     convo: list[dict[str, Any]] = list(messages)
     cited_urls: set[str] = set()
 
@@ -75,7 +77,7 @@ async def run_agent(
             stream_ctx = client.messages.stream(
                 model=model,
                 max_tokens=MAX_TOKENS,
-                system=_cached_system(),
+                system=_cached_system(product),
                 tools=_cached_tools(),
                 thinking={"type": "adaptive"},
                 messages=convo,

@@ -23,6 +23,7 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: list[Message]
+    product: str = "cii"
 
 
 def _to_anthropic_messages(msgs: list[Message]) -> list[dict[str, Any]]:
@@ -52,6 +53,7 @@ async def _replay_cached(entry: dict[str, Any]) -> AsyncIterator[dict[str, str]]
 @router.post("/chat")
 async def chat(req: ChatRequest) -> EventSourceResponse:
     messages = _to_anthropic_messages(req.messages)
+    product = req.product
     cache_q = _is_cacheable(req.messages)
 
     async def event_stream() -> AsyncIterator[dict[str, str]]:
@@ -68,7 +70,7 @@ async def chat(req: ChatRequest) -> EventSourceResponse:
         had_error = False
 
         try:
-            async for evt in run_agent(messages):
+            async for evt in run_agent(messages, product=product):
                 if evt["type"] == "text":
                     answer_buf.append(evt.get("delta", ""))
                 elif evt["type"] == "citation":

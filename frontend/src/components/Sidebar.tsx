@@ -85,10 +85,14 @@ export function Sidebar({
   open,
   onToggle,
   onNewChat,
+  product,
+  onProductChange,
 }: {
   open: boolean;
   onToggle: () => void;
   onNewChat?: () => void;
+  product: "cii" | "duo";
+  onProductChange: (p: "cii" | "duo") => void;
 }) {
   const [status, setStatus] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -103,7 +107,7 @@ export function Sidebar({
 
   const load = async () => {
     try {
-      setStatus(await getStatus());
+      setStatus(await getStatus(product));
     } catch {
       // ignore
     }
@@ -122,7 +126,7 @@ export function Sidebar({
     const t = setInterval(load, 5000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [devMode]);
+  }, [devMode, product]);
 
   useEffect(() => {
     try {
@@ -135,7 +139,7 @@ export function Sidebar({
   const onReindex = async () => {
     setRefreshing(true);
     try {
-      await startIngest(false);
+      await startIngest(false, product);
     } finally {
       setRefreshing(false);
       load();
@@ -172,7 +176,9 @@ export function Sidebar({
           </svg>
         </button>
         {open && (
-          <div className="ml-3 text-sm font-semibold text-slate-900 truncate">CII Assistant</div>
+          <div className="ml-3 text-sm font-semibold text-slate-900 truncate">
+            Security DocPilot
+          </div>
         )}
       </div>
 
@@ -184,6 +190,29 @@ export function Sidebar({
           >
             + New chat
           </button>
+
+          <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+            <button
+              onClick={() => onProductChange("cii")}
+              className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium transition ${
+                product === "cii"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              CII
+            </button>
+            <button
+              onClick={() => onProductChange("duo")}
+              className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium transition ${
+                product === "duo"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Duo
+            </button>
+          </div>
 
           <label className="flex items-center justify-between text-xs text-slate-600 cursor-pointer select-none">
             <span>Dev mode</span>

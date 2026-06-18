@@ -6,7 +6,7 @@ import logging
 from dataclasses import asdict
 from pathlib import Path
 
-from ..config import get_settings
+from ..config import get_product, get_settings
 from ..rag.store import ChromaStore
 from .chunker import chunk_markdown
 from .crawler import FetchedPage, crawl_all, url_hash
@@ -15,13 +15,13 @@ from .embedder import VoyageEmbedder
 logger = logging.getLogger(__name__)
 
 
-def _hash_map_path() -> Path:
+def _hash_map_path(product: str = "cii") -> Path:
     settings = get_settings()
-    return Path(settings.chroma_path).parent / "url_hashes.json"
+    return Path(settings.chroma_path).parent / f"url_hashes_{product}.json"
 
 
-def _load_hashes() -> dict[str, str]:
-    p = _hash_map_path()
+def _load_hashes(product: str = "cii") -> dict[str, str]:
+    p = _hash_map_path(product)
     if p.exists():
         try:
             return json.loads(p.read_text())
@@ -30,8 +30,8 @@ def _load_hashes() -> dict[str, str]:
     return {}
 
 
-def _save_hashes(h: dict[str, str]) -> None:
-    p = _hash_map_path()
+def _save_hashes(h: dict[str, str], product: str = "cii") -> None:
+    p = _hash_map_path(product)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(h, indent=2))
 
@@ -40,11 +40,11 @@ def _chunk_id(url: str, order: int) -> str:
     return f"{url_hash(url)}-{order}"
 
 
-def index_pages(pages: list[FetchedPage], force: bool = False) -> dict[str, int]:
+def index_pages(pages: list[FetchedPage], force: bool = False, collection_name: str | None = None, product: str = "cii") -> dict[str, int]:
     """Chunk → embed → upsert into Chroma. Returns counts."""
-    store = ChromaStore()
+    store = ChromaStore(collection_name=collection_name)
     embedder = VoyageEmbedder()
-    prior = _load_hashes()
+    prior = _load_hashes(product)
 
     to_process: list[FetchedPage] = []
     skipped = 0
@@ -86,7 +86,7 @@ def index_pages(pages: list[FetchedPage], force: bool = False) -> dict[str, int]
         prior[page.url] = page.content_hash
         total_chunks += len(chunks)
 
-    _save_hashes(prior)
+    _save_hashes(prior, product)
     return {
         "pages_indexed": len(to_process),
         "pages_skipped": skipped,
@@ -95,19 +95,22 @@ def index_pages(pages: list[FetchedPage], force: bool = False) -> dict[str, int]
     }
 
 
-async def run_full_pipeline(force: bool = False) -> dict[str, int]:
+async def run_full_pipeline(force: bool = False, product: str = "cii") -> dict[str, int]:
     from . import progress
     from .github_crawler import crawl_all_github_repos, discover_github_repos_from_pages
 
+    cfg = get_product(product)
     progress.reset()
     progress.set_phase("discovering")
 
-    # 1. Crawl docs.oort.io
-    pages = await crawl_all()
+    # 1. Crawl product doc sites
+    pages: list[FetchedPage] = []
+    for base_url in cfg.base_urls:
+        pages.extend(await crawl_all(base_url=base_url))
 
     # 2. Determine GitHub repos to crawl (configured + discovered from docs)
     settings = get_settings()
-    repo_slugs = set(settings.github_repo_list)
+    repo_slugs = set(cfg.github_repos or settings.github_repo_list)
     if settings.github_follow_links:
         discovered = discover_github_repos_from_pages(pages)
         new_repos = discovered - repo_slugs
@@ -124,7 +127,7 @@ async def run_full_pipeline(force: bool = False) -> dict[str, int]:
     progress.set_phase("indexing")
     logger.info("crawl complete: %d total pages", len(pages))
     # offload indexing (CPU + sync IO) to a thread to keep loop responsive
-    result = await asyncio.to_thread(index_pages, pages, force)
+    result = await asyncio.to_thread(index_pages, pages, force, cfg.collection_name, product)
     progress.set_indexed(
         pages=result.get("pages_indexed", 0),
         skipped=result.get("pages_skipped", 0),

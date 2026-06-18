@@ -13,12 +13,13 @@ export type ChatMessage = { role: "user" | "assistant"; content: string };
 export async function streamChat(
   messages: ChatMessage[],
   onEvent: (evt: AgentEvent) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  product: string = "cii"
 ): Promise<void> {
   const res = await fetch(`${API_BASE}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({ messages, product }),
     signal,
   });
   if (!res.ok || !res.body) {
@@ -53,8 +54,8 @@ export async function streamChat(
   }
 }
 
-export async function getStatus(): Promise<any> {
-  const r = await fetch(`${API_BASE}/api/status`);
+export async function getStatus(product: string = "cii"): Promise<any> {
+  const r = await fetch(`${API_BASE}/api/status?product=${product}`);
   return r.json();
 }
 
@@ -92,11 +93,11 @@ export async function sendContact(
   return r.json();
 }
 
-export async function startIngest(force = false): Promise<any> {
+export async function startIngest(force = false, product = "cii"): Promise<any> {
   const r = await fetch(`${API_BASE}/api/ingest`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ force }),
+    body: JSON.stringify({ force, product }),
   });
   return r.json();
 }

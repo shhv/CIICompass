@@ -34,69 +34,77 @@ class _JobState:
         self.error: str | None = None
 
 
-_state = _JobState()
+_states: dict[str, _JobState] = {}
 _lock = asyncio.Lock()
+
+
+def _get_state(product: str) -> _JobState:
+    if product not in _states:
+        _states[product] = _JobState()
+    return _states[product]
 
 
 class IngestRequest(BaseModel):
     force: bool = False
+    product: str = "cii"
 
 
-async def _run_job(force: bool) -> None:
+async def _run_job(force: bool, product: str) -> None:
+    state = _get_state(product)
     try:
-        _state.status = "running"
+        state.status = "running"
         timeout = get_settings().ingest_timeout_sec
-        result = await asyncio.wait_for(run_full_pipeline(force=force), timeout=timeout)
+        result = await asyncio.wait_for(run_full_pipeline(force=force, product=product), timeout=timeout)
         await qa_cache.clear()
-        _state.result = result
-        _state.status = "done"
+        state.result = result
+        state.status = "done"
     except asyncio.TimeoutError:
         logger.warning("ingest exceeded %ss timeout", timeout)
         ingest_progress.set_phase("error")
-        _state.error = f"timed out after {timeout}s"
-        _state.status = "error"
+        state.error = f"timed out after {timeout}s"
+        state.status = "error"
     except Exception as e:
         logger.exception("ingest failed")
         ingest_progress.set_phase("error")
-        _state.error = str(e)
-        _state.status = "error"
+        state.error = str(e)
+        state.status = "error"
     finally:
-        _state.finished_at = time.time()
+        state.finished_at = time.time()
 
 
 @router.post("/ingest")
 async def ingest(req: IngestRequest, background_tasks: BackgroundTasks) -> dict[str, Any]:
-    started = await start_ingest(req.force, background_tasks=background_tasks)
+    started = await start_ingest(req.force, product=req.product, background_tasks=background_tasks)
+    state = _get_state(req.product)
     if not started:
-        return {"status": "already_running", "job_id": _state.job_id}
-    return {"status": "started", "job_id": _state.job_id}
+        return {"status": "already_running", "job_id": state.job_id}
+    return {"status": "started", "job_id": state.job_id}
 
 
-async def start_ingest(force: bool, background_tasks: BackgroundTasks | None = None) -> bool:
-    """Kick off the ingest job. Returns False if one is already running.
-
-    If background_tasks is provided (HTTP path), the job is scheduled on it.
-    Otherwise (scheduler path) it runs as a fire-and-forget asyncio task.
-    """
+async def start_ingest(force: bool, product: str = "cii", background_tasks: BackgroundTasks | None = None) -> bool:
+    state = _get_state(product)
     async with _lock:
-        if _state.status == "running":
+        if state.status == "running":
             return False
-        _state.job_id = uuid.uuid4().hex
-        _state.started_at = time.time()
-        _state.finished_at = None
-        _state.result = None
-        _state.error = None
-        _state.status = "running"
+        state.job_id = uuid.uuid4().hex
+        state.started_at = time.time()
+        state.finished_at = None
+        state.result = None
+        state.error = None
+        state.status = "running"
     if background_tasks is not None:
-        background_tasks.add_task(_run_job, force)
+        background_tasks.add_task(_run_job, force, product)
     else:
-        asyncio.create_task(_run_job(force))
+        asyncio.create_task(_run_job(force, product))
     return True
 
 
 @router.get("/status")
-async def status() -> dict[str, Any]:
-    store = ChromaStore()
+async def status(product: str = "cii") -> dict[str, Any]:
+    from ..config import get_product
+    cfg = get_product(product)
+    store = ChromaStore(collection_name=cfg.collection_name)
+    state = _get_state(product)
     metas = store.all_metadatas()
     by_cat: Counter[str] = Counter()
     urls: set[str] = set()
@@ -113,12 +121,12 @@ async def status() -> dict[str, Any]:
         "qa_cache_size": await qa_cache.size(),
         "feedback": await fb_store.stats(),
         "job": {
-            "id": _state.job_id,
-            "status": _state.status,
-            "started_at": _state.started_at,
-            "finished_at": _state.finished_at,
-            "result": _state.result,
-            "error": _state.error,
+            "id": state.job_id,
+            "status": state.status,
+            "started_at": state.started_at,
+            "finished_at": state.finished_at,
+            "result": state.result,
+            "error": state.error,
             "progress": ingest_progress.get_progress().snapshot(),
         },
     }

@@ -10,6 +10,14 @@ export default function App() {
       return false;
     }
   });
+  const [product, setProduct] = useState<"cii" | "duo">(() => {
+    try {
+      const stored = localStorage.getItem("cii.product");
+      return stored === "duo" ? "duo" : "cii";
+    } catch {
+      return "cii";
+    }
+  });
   const [clearChat, setClearChat] = useState<(() => void) | null>(null);
   const toggle = () => {
     setOpen((v) => {
@@ -22,11 +30,19 @@ export default function App() {
       return next;
     });
   };
+  const switchProduct = (p: "cii" | "duo") => {
+    setProduct(p);
+    try {
+      localStorage.setItem("cii.product", p);
+    } catch {
+      // ignore
+    }
+  };
   return (
     <div className="flex h-full">
-      <Sidebar open={open} onToggle={toggle} onNewChat={clearChat ?? undefined} />
+      <Sidebar open={open} onToggle={toggle} onNewChat={clearChat ?? undefined} product={product} onProductChange={switchProduct} />
       <main className="flex-1 min-w-0">
-        <ChatWindow onClearReady={(fn) => setClearChat(() => fn)} />
+        <ChatWindow onClearReady={(fn) => setClearChat(() => fn)} product={product} />
       </main>
     </div>
   );
