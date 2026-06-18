@@ -36,15 +36,17 @@ Tech under the hood:
 
 ## Setup & Run
 
-Requires [Claude Code](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) (VPN required for install). Then in the Claude Code prompt:
+Download the ZIP from this repo, unzip, and open [Claude Code](https://wwwin-github.cisco.com/netascode/claudegate/blob/master/docs/getting-started.md) in the folder. Then run:
 
 ```
-/run-cii-dev          ← boots backend + frontend
-/reindex              ← populates the doc index (first time only)
+/run-cii-dev          ← boots backend + frontend (required)
+/reindex              ← populates the doc index (required, first time only)
 /start-webex-webhook  ← enables the Webex bot (optional)
 ```
 
-Open **http://localhost:5173** to start chatting. Full setup details (prerequisites, manual CLI commands): [SETUP.md](SETUP.md)
+Then open **http://localhost:5173** to start chatting.
+
+> Prerequisites, manual CLI commands, and architecture details: **[SETUP.md](SETUP.md)**
 
 ## Key Outcomes
 
