@@ -139,24 +139,34 @@ async def _link_crawl(client: httpx.AsyncClient, base_url: str, max_pages: int =
     seen: set[str] = set()
     queue: list[str] = [base_url]
     out: list[str] = []
+    sem = asyncio.Semaphore(10)
+
+    async def _fetch_one(url: str) -> list[str]:
+        async with sem:
+            try:
+                r = await client.get(url, timeout=20.0)
+            except Exception as e:
+                logger.warning("link-crawl fetch %s failed: %s", url, e)
+                return []
+            if r.status_code != 200 or "text/html" not in r.headers.get("content-type", ""):
+                return []
+            out.append(url)
+            soup = BeautifulSoup(r.text, "lxml")
+            found: list[str] = []
+            for a in soup.find_all("a", href=True):
+                href = urljoin(url, a["href"]).split("#", 1)[0]
+                if same_host(href, base_url) and href not in seen:
+                    seen.add(href)
+                    found.append(href)
+            return found
+
+    seen.add(base_url)
     while queue and len(out) < max_pages:
-        url = queue.pop(0)
-        if url in seen:
-            continue
-        seen.add(url)
-        try:
-            r = await client.get(url, timeout=20.0)
-        except Exception as e:
-            logger.warning("link-crawl fetch %s failed: %s", url, e)
-            continue
-        if r.status_code != 200 or "text/html" not in r.headers.get("content-type", ""):
-            continue
-        out.append(url)
-        soup = BeautifulSoup(r.text, "lxml")
-        for a in soup.find_all("a", href=True):
-            href = urljoin(url, a["href"]).split("#", 1)[0]
-            if same_host(href, base_url) and href not in seen:
-                queue.append(href)
+        batch = queue[:20]
+        queue = queue[20:]
+        results = await asyncio.gather(*(_fetch_one(u) for u in batch))
+        for links in results:
+            queue.extend(links)
     return out
 
 

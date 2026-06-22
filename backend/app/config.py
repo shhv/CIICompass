@@ -65,7 +65,7 @@ class Settings(BaseSettings):
     escalate_after_iter: int = Field(default=3, alias="ESCALATE_AFTER_ITER")
 
     # Hard cap on a single ingest run. Job is failed if it exceeds this.
-    ingest_timeout_sec: int = Field(default=1800, alias="INGEST_TIMEOUT_SEC")
+    ingest_timeout_sec: int = Field(default=3600, alias="INGEST_TIMEOUT_SEC")
 
     cors_origins: str = Field(default="http://localhost:5173", alias="CORS_ORIGINS")
 

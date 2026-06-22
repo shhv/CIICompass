@@ -91,10 +91,10 @@ function ReferencesBlock({
   count: number;
   pending?: boolean;
 }) {
-  // Stay open while streaming so refs visibly appear, then collapse on done.
+  // Keep references visible after streaming completes.
   const [userOpen, setUserOpen] = useState<boolean | null>(null);
   const collapsible = count > 2;
-  const open = userOpen ?? (pending || !collapsible);
+  const open = userOpen ?? true;
   return (
     <div className="mt-8 pt-4 border-t border-slate-200">
       {collapsible ? (
