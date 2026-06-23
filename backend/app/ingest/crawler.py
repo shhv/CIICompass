@@ -203,8 +203,17 @@ def _extract_main(html: str) -> tuple[str, list[str], str | None, str]:
     for sel in ["nav", "footer", "header", "aside"]:
         for el in main.find_all(sel):
             el.decompose()
+    # Remove skip-links, banner alerts, and top-nav remnants
+    for el in main.find_all("a", href="#main-content"):
+        el.decompose()
+    for el in main.find_all(attrs={"class": re.compile(r"banner|alert|notification|skip", re.I)}):
+        el.decompose()
     markdown_text = md(str(main), heading_style="ATX")
     markdown_text = re.sub(r"\n{3,}", "\n\n", markdown_text).strip()
+    # Strip leading nav cruft before the first heading
+    heading_match = re.search(r"^#{1,3}\s+", markdown_text, re.MULTILINE)
+    if heading_match and heading_match.start() > 0:
+        markdown_text = markdown_text[heading_match.start():]
     return title, breadcrumb, last_updated, markdown_text
 
 

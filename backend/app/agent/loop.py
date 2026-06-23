@@ -59,6 +59,9 @@ async def run_agent(
     cited_urls: set[str] = set()
 
     model, route_reason = choose_model(messages, settings)
+    # Duo index is newer and less structured — always use the heavier model.
+    if product == "duo":
+        model, route_reason = settings.reasoning_model, "forced:duo"
     escalated = False
     yield {"type": "model", "name": model, "reason": route_reason}
 
