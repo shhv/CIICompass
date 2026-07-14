@@ -8,7 +8,9 @@ export type AgentEvent =
   | { type: "done" }
   | { type: "error"; message: string };
 
-export type ChatMessage = { role: "user" | "assistant"; content: string };
+export type FileAttachment = { filename: string; media_type: string; data: string };
+
+export type ChatMessage = { role: "user" | "assistant"; content: string; files?: FileAttachment[] };
 
 export async function streamChat(
   messages: ChatMessage[],

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { streamChat, type AgentEvent, type ChatMessage } from "../lib/api";
+import { streamChat, type AgentEvent, type ChatMessage, type FileAttachment } from "../lib/api";
 import { MessageBubble, type ToolCall } from "./MessageBubble";
 import type { Citation } from "./Citation";
 import { Composer } from "./Composer";
@@ -8,7 +8,9 @@ type UIMessage = ChatMessage & {
   citations?: Citation[];
   toolCalls?: ToolCall[];
   pending?: boolean;
-  timestamp?: number; // ms since epoch; persisted in localStorage alongside message content
+  timestamp?: number;
+  hasFiles?: boolean;
+  filePreviews?: { filename: string; preview?: string }[];
 };
 
 const HISTORY_KEY_PREFIX = "cii.chatHistory";
@@ -30,7 +32,12 @@ function loadHistory(product: string): UIMessage[] {
 
 function saveHistory(msgs: UIMessage[], product: string) {
   try {
-    localStorage.setItem(historyKey(product), JSON.stringify(msgs.filter((m) => !m.pending)));
+    // Strip file data from localStorage to avoid bloat
+    const stripped = msgs.filter((m) => !m.pending).map((m) => {
+      const { files, ...rest } = m;
+      return rest;
+    });
+    localStorage.setItem(historyKey(product), JSON.stringify(stripped));
   } catch {
     // Quota exceeded or private mode — fail silently
   }
@@ -62,12 +69,17 @@ export function ChatWindow({ onClearReady, product }: { onClearReady?: (fn: () =
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product]);
 
-  const send = async (text: string) => {
-    // Stamp both messages at send time so timestamps survive localStorage round-trips
+  const send = async (text: string, files?: FileAttachment[]) => {
     const now = Date.now();
+    const userMsg: UIMessage = {
+      role: "user",
+      content: text,
+      timestamp: now,
+      ...(files && { files, hasFiles: true, filePreviews: files.map((f) => ({ filename: f.filename })) }),
+    };
     const next: UIMessage[] = [
       ...messages,
-      { role: "user", content: text, timestamp: now },
+      userMsg,
       { role: "assistant", content: "", citations: [], toolCalls: [], pending: true, timestamp: now },
     ];
     setMessages(next);
@@ -75,7 +87,7 @@ export function ChatWindow({ onClearReady, product }: { onClearReady?: (fn: () =
 
     const history: ChatMessage[] = next
       .filter((m) => !m.pending)
-      .map((m) => ({ role: m.role, content: m.content }));
+      .map((m) => ({ role: m.role, content: m.content, ...(m.files && { files: m.files }) }));
 
     const update = (fn: (m: UIMessage) => UIMessage) =>
       setMessages((prev) => {
@@ -140,6 +152,7 @@ export function ChatWindow({ onClearReady, product }: { onClearReady?: (fn: () =
               toolCalls={m.toolCalls}
               pending={m.pending}
               timestamp={m.timestamp}
+              filePreviews={m.filePreviews}
               question={
                 m.role === "assistant" && i > 0 && messages[i - 1].role === "user"
                   ? messages[i - 1].content

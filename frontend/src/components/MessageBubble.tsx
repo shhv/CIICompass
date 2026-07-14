@@ -179,6 +179,7 @@ export function MessageBubble({
   pending,
   question,
   timestamp,
+  filePreviews,
 }: {
   role: "user" | "assistant";
   content: string;
@@ -187,6 +188,7 @@ export function MessageBubble({
   pending?: boolean;
   question?: string;
   timestamp?: number;
+  filePreviews?: { filename: string; preview?: string }[];
 }) {
   const isUser = role === "user";
   const [copied, setCopied] = useState(false);
@@ -209,7 +211,18 @@ export function MessageBubble({
       >
         {!isUser && toolCalls && <ToolCallsBlock toolCalls={toolCalls} />}
         {isUser ? (
-          content
+          <>
+            {filePreviews && filePreviews.length > 0 && (
+              <div className="flex gap-1 mb-1 flex-wrap">
+                {filePreviews.map((f, i) => (
+                  <span key={i} className="inline-block bg-sky-500 rounded px-2 py-0.5 text-xs text-sky-100">
+                    {f.filename}
+                  </span>
+                ))}
+              </div>
+            )}
+            {content}
+          </>
         ) : (
           <div
             className="prose prose-slate prose-base max-w-none

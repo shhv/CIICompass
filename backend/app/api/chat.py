@@ -16,9 +16,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+class FileAttachment(BaseModel):
+    filename: str
+    media_type: str
+    data: str  # base64-encoded
+
+
 class Message(BaseModel):
     role: str
     content: str
+    files: list[FileAttachment] = []
 
 
 class ChatRequest(BaseModel):
@@ -26,8 +33,48 @@ class ChatRequest(BaseModel):
     product: str = "cii"
 
 
+IMAGE_TYPES = {"image/png", "image/jpeg", "image/gif", "image/webp"}
+
+
 def _to_anthropic_messages(msgs: list[Message]) -> list[dict[str, Any]]:
-    return [{"role": m.role, "content": m.content} for m in msgs if m.role in ("user", "assistant")]
+    out = []
+    for m in msgs:
+        if m.role not in ("user", "assistant"):
+            continue
+        if not m.files or m.role != "user":
+            out.append({"role": m.role, "content": m.content})
+            continue
+        # Build multi-block content for messages with file attachments
+        blocks: list[dict[str, Any]] = []
+        for f in m.files:
+            if f.media_type in IMAGE_TYPES:
+                blocks.append({
+                    "type": "image",
+                    "source": {"type": "base64", "media_type": f.media_type, "data": f.data},
+                })
+            elif f.media_type == "application/pdf":
+                blocks.append({
+                    "type": "document",
+                    "source": {"type": "base64", "media_type": "application/pdf", "data": f.data},
+                })
+            else:
+                # Text-based files: decode and inline (cap at 100k chars)
+                import base64
+                MAX_TEXT_CHARS = 100_000
+                try:
+                    text = base64.b64decode(f.data).decode("utf-8", errors="replace")
+                except Exception:
+                    text = "(could not decode file)"
+                if len(text) > MAX_TEXT_CHARS:
+                    # For log files, keep the tail (recent entries matter more)
+                    if f.filename.endswith((".log", ".txt")):
+                        text = "[truncated — showing last portion]\n\n" + text[-MAX_TEXT_CHARS:]
+                    else:
+                        text = text[:MAX_TEXT_CHARS] + "\n\n[truncated — file too large]"
+                blocks.append({"type": "text", "text": f"[File: {f.filename}]\n{text}"})
+        blocks.append({"type": "text", "text": m.content})
+        out.append({"role": "user", "content": blocks})
+    return out
 
 
 def _is_cacheable(msgs: list[Message]) -> str | None:
