@@ -55,6 +55,8 @@ class Settings(BaseSettings):
     crawl_rate_per_sec: float = Field(default=1.0, alias="CRAWL_RATE_PER_SEC")
     user_agent: str = Field(default="CII-Assistant-Indexer/0.1", alias="USER_AGENT")
 
+    extract_images: bool = Field(default=True, alias="EXTRACT_IMAGES")
+
     embed_batch_size: int = Field(default=64, alias="EMBED_BATCH_SIZE")
 
     reasoning_model: str = Field(default="claude-opus-4.7", alias="REASONING_MODEL")

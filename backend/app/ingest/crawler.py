@@ -170,7 +170,12 @@ async def _link_crawl(client: httpx.AsyncClient, base_url: str, max_pages: int =
     return out
 
 
-def _extract_main(html: str) -> tuple[str, list[str], str | None, str]:
+async def _extract_main(
+    html: str,
+    page_url: str = "",
+    anthropic_client=None,
+    image_semaphore=None,
+) -> tuple[str, list[str], str | None, str]:
     """Return (title, breadcrumb, last_updated, markdown_text)."""
     soup = BeautifulSoup(html, "lxml")
 
@@ -208,6 +213,11 @@ def _extract_main(html: str) -> tuple[str, list[str], str | None, str]:
         el.decompose()
     for el in main.find_all(attrs={"class": re.compile(r"banner|alert|notification|skip", re.I)}):
         el.decompose()
+
+    # Extract text from images via vision API before markdownify
+    from .image_extractor import extract_images_from_soup
+    await extract_images_from_soup(main, page_url, anthropic_client, image_semaphore)
+
     markdown_text = md(str(main), heading_style="ATX")
     markdown_text = re.sub(r"\n{3,}", "\n\n", markdown_text).strip()
     # Strip leading nav cruft before the first heading
@@ -222,6 +232,8 @@ async def fetch_page(
     url: str,
     limiter: RateLimiter,
     raw_dir: Path,
+    anthropic_client=None,
+    image_semaphore=None,
 ) -> FetchedPage | None:
     await limiter.wait()
     try:
@@ -239,7 +251,9 @@ async def fetch_page(
     raw_file = raw_dir / f"{url_hash(url)}.html"
     raw_file.write_text(r.text, encoding="utf-8")
 
-    title, breadcrumb, last_updated, markdown_text = _extract_main(r.text)
+    title, breadcrumb, last_updated, markdown_text = await _extract_main(
+        r.text, page_url=url, anthropic_client=anthropic_client, image_semaphore=image_semaphore
+    )
     if not markdown_text:
         from . import progress as _p
         _p.bump_failed("empty markdown")
@@ -268,6 +282,17 @@ async def crawl_all(base_url: str | None = None) -> list[FetchedPage]:
     headers = {"User-Agent": settings.user_agent}
     sem = asyncio.Semaphore(settings.crawl_concurrency)
 
+    # Vision extraction resources
+    anthropic_client = None
+    image_semaphore = None
+    if settings.extract_images and settings.anthropic_api_key:
+        import anthropic
+        anthropic_client = anthropic.AsyncAnthropic(
+            api_key=settings.anthropic_api_key,
+            base_url=settings.anthropic_base_url,
+        )
+        image_semaphore = asyncio.Semaphore(5)
+
     async with httpx.AsyncClient(headers=headers, follow_redirects=True) as client:
         urls = await discover_urls(client, base)
         urls = sorted(set(u for u in urls if _same_base(u, base)))
@@ -278,7 +303,7 @@ async def crawl_all(base_url: str | None = None) -> list[FetchedPage]:
 
         async def _one(u: str) -> FetchedPage | None:
             async with sem:
-                return await fetch_page(client, u, limiter, raw_dir)
+                return await fetch_page(client, u, limiter, raw_dir, anthropic_client, image_semaphore)
 
         results = await asyncio.gather(*(_one(u) for u in urls))
     return [p for p in results if p is not None]
