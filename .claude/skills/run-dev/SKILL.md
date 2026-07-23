@@ -1,6 +1,6 @@
 ---
-name: run-cii-dev
-description: Launch the CII Assistant dev stack locally — backend (FastAPI on :8000) and frontend (Vite on :5173). Use this when the user asks to start, run, or boot the CII assistant for development. Does NOT handle the Webex bot tunnel — use /start-webex-webhook for that.
+name: run-dev
+description: Launch the dev stack locally — backend (FastAPI on :8000) and frontend (Vite on :5173). Use this when the user asks to start, run, or boot the assistant for development. Does NOT handle the Webex bot tunnel — use /start-webex-webhook for that.
 ---
 
 # Launch the CII Assistant dev stack

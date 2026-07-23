@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     user_agent: str = Field(default="CII-Assistant-Indexer/0.1", alias="USER_AGENT")
 
     extract_images: bool = Field(default=True, alias="EXTRACT_IMAGES")
+    js_rendered_domains: list[str] = Field(default=["help.duo.com"], alias="JS_RENDERED_DOMAINS")
 
     embed_batch_size: int = Field(default=64, alias="EMBED_BATCH_SIZE")
 

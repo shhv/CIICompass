@@ -93,26 +93,30 @@ class RateLimiter:
 
 async def discover_urls(client: httpx.AsyncClient, base_url: str) -> list[str]:
     """Fetch sitemap.xml; fall back to recursive link crawl if missing."""
-    sitemap_url = urljoin(base_url.rstrip("/") + "/", "sitemap.xml")
-    try:
-        r = await client.get(sitemap_url, timeout=20.0)
-        if r.status_code == 200 and ("<urlset" in r.text or "<sitemapindex" in r.text):
-            entries = _parse_sitemap(r.text, base_url)
-            urls: list[str] = []
-            for entry in entries:
-                if entry.endswith(".xml"):
-                    try:
-                        sub = await client.get(entry, timeout=20.0)
-                        if sub.status_code == 200:
-                            urls.extend(_parse_sitemap(sub.text, base_url))
-                    except Exception as e:
-                        logger.warning("sub-sitemap fetch %s failed: %s", entry, e)
-                else:
-                    urls.append(entry)
-            if urls:
-                return urls
-    except Exception as e:
-        logger.warning("sitemap fetch failed: %s", e)
+    sitemap_candidates = [
+        urljoin(base_url.rstrip("/") + "/", "sitemap.xml"),
+        urljoin(base_url.rstrip("/") + "/", "s/sitemap.xml"),
+    ]
+    for sitemap_url in sitemap_candidates:
+        try:
+            r = await client.get(sitemap_url, timeout=20.0)
+            if r.status_code == 200 and ("<urlset" in r.text or "<sitemapindex" in r.text):
+                entries = _parse_sitemap(r.text, base_url)
+                urls: list[str] = []
+                for entry in entries:
+                    if entry.endswith(".xml"):
+                        try:
+                            sub = await client.get(entry, timeout=20.0)
+                            if sub.status_code == 200:
+                                urls.extend(_parse_sitemap(sub.text, base_url))
+                        except Exception as e:
+                            logger.warning("sub-sitemap fetch %s failed: %s", entry, e)
+                    else:
+                        urls.append(entry)
+                if urls:
+                    return urls
+        except Exception as e:
+            logger.warning("sitemap fetch %s failed: %s", sitemap_url, e)
     return await _link_crawl(client, base_url)
 
 
@@ -155,7 +159,7 @@ async def _link_crawl(client: httpx.AsyncClient, base_url: str, max_pages: int =
             found: list[str] = []
             for a in soup.find_all("a", href=True):
                 href = urljoin(url, a["href"]).split("#", 1)[0]
-                if same_host(href, base_url) and href not in seen:
+                if _same_base(href, base_url) and href not in seen:
                     seen.add(href)
                     found.append(href)
             return found
@@ -227,6 +231,27 @@ async def _extract_main(
     return title, breadcrumb, last_updated, markdown_text
 
 
+async def _fetch_js_rendered(url: str, browser) -> str | None:
+    """Fetch page content using Playwright for JS-rendered sites."""
+    try:
+        page = await browser.new_page()
+        await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        await page.wait_for_timeout(3000)
+        html = await page.content()
+        await page.close()
+        return html
+    except Exception as e:
+        logger.warning("playwright fetch %s failed: %s", url, e)
+        return None
+
+
+def _needs_js_rendering(url: str) -> bool:
+    """Check if URL belongs to a JS-rendered domain."""
+    settings = get_settings()
+    domain = urlparse(url).netloc
+    return domain in settings.js_rendered_domains
+
+
 async def fetch_page(
     client: httpx.AsyncClient,
     url: str,
@@ -234,6 +259,7 @@ async def fetch_page(
     raw_dir: Path,
     anthropic_client=None,
     image_semaphore=None,
+    browser=None,
 ) -> FetchedPage | None:
     await limiter.wait()
     try:
@@ -248,12 +274,22 @@ async def fetch_page(
         _p.bump_failed(f"status={r.status_code} ct={r.headers.get('content-type','')[:40]}")
         return None
 
-    raw_file = raw_dir / f"{url_hash(url)}.html"
-    raw_file.write_text(r.text, encoding="utf-8")
-
+    html = r.text
     title, breadcrumb, last_updated, markdown_text = await _extract_main(
-        r.text, page_url=url, anthropic_client=anthropic_client, image_semaphore=image_semaphore
+        html, page_url=url, anthropic_client=anthropic_client, image_semaphore=image_semaphore
     )
+
+    if len(markdown_text) < 100 and browser and _needs_js_rendering(url):
+        js_html = await _fetch_js_rendered(url, browser)
+        if js_html:
+            html = js_html
+            title, breadcrumb, last_updated, markdown_text = await _extract_main(
+                html, page_url=url, anthropic_client=anthropic_client, image_semaphore=image_semaphore
+            )
+
+    raw_file = raw_dir / f"{url_hash(url)}.html"
+    raw_file.write_text(html, encoding="utf-8")
+
     if not markdown_text:
         from . import progress as _p
         _p.bump_failed("empty markdown")
@@ -293,17 +329,44 @@ async def crawl_all(base_url: str | None = None) -> list[FetchedPage]:
         )
         image_semaphore = asyncio.Semaphore(5)
 
-    async with httpx.AsyncClient(headers=headers, follow_redirects=True) as client:
-        urls = await discover_urls(client, base)
-        urls = sorted(set(u for u in urls if _same_base(u, base)))
-        logger.info("discovered %d urls", len(urls))
-        from . import progress as _p
-        _p.set_discovered(len(urls))
-        _p.set_phase("fetching")
+    # Launch shared Playwright browser if any URLs need JS rendering
+    browser = None
+    needs_js = any(
+        urlparse(base).netloc in settings.js_rendered_domains
+        for base in ([base] if isinstance(base, str) else [base])
+    )
+    playwright_ctx = None
+    if needs_js:
+        try:
+            from playwright.async_api import async_playwright
+            pw_cm = async_playwright()
+            playwright_ctx = pw_cm
+            pw = await pw_cm.__aenter__()
+            browser = await pw.chromium.launch()
+        except Exception as e:
+            logger.warning("playwright launch failed, JS pages will be skipped: %s", e)
 
-        async def _one(u: str) -> FetchedPage | None:
-            async with sem:
-                return await fetch_page(client, u, limiter, raw_dir, anthropic_client, image_semaphore)
+    try:
+        async with httpx.AsyncClient(headers=headers, follow_redirects=True) as client:
+            urls = await discover_urls(client, base)
+            urls = sorted(set(u for u in urls if _same_base(u, base)))
+            logger.info("discovered %d urls", len(urls))
+            from . import progress as _p
+            _p.set_discovered(len(urls))
+            _p.set_phase("fetching")
 
-        results = await asyncio.gather(*(_one(u) for u in urls))
+            async def _one(u: str) -> FetchedPage | None:
+                async with sem:
+                    return await fetch_page(
+                        client, u, limiter, raw_dir,
+                        anthropic_client, image_semaphore, browser,
+                    )
+
+            results = await asyncio.gather(*(_one(u) for u in urls))
+    finally:
+        if browser:
+            await browser.close()
+        if playwright_ctx:
+            await playwright_ctx.__aexit__(None, None, None)
+
     return [p for p in results if p is not None]
