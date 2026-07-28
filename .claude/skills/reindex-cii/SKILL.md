@@ -16,9 +16,9 @@ description: Trigger a CII docs re-index (docs.oort.io) against the running back
 
 ```bash
 # Backend reachable?
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/health
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8001/health
 # Is there already a job running?
-curl -s "http://localhost:8000/api/status?product=cii" | python3 -c "
+curl -s "http://localhost:8001/api/status?product=cii" | python3 -c "
 import sys, json
 print(json.load(sys.stdin)['job']['status'])
 "
@@ -32,7 +32,7 @@ instead (`/api/ingest` will return `already_running`).
 Incremental (only re-embeds changed pages — fast, the default):
 
 ```bash
-curl -s -X POST http://localhost:8000/api/ingest \
+curl -s -X POST http://localhost:8001/api/ingest \
   -H 'content-type: application/json' \
   -d '{"force":false,"product":"cii"}' | python3 -m json.tool
 ```
@@ -40,7 +40,7 @@ curl -s -X POST http://localhost:8000/api/ingest \
 Full re-embed (use after a chunker/embedder change):
 
 ```bash
-curl -s -X POST http://localhost:8000/api/ingest \
+curl -s -X POST http://localhost:8001/api/ingest \
   -H 'content-type: application/json' \
   -d '{"force":true,"product":"cii"}' | python3 -m json.tool
 ```
@@ -49,7 +49,7 @@ curl -s -X POST http://localhost:8000/api/ingest \
 
 ```bash
 while true; do
-  curl -s "http://localhost:8000/api/status?product=cii" | python3 -c "
+  curl -s "http://localhost:8001/api/status?product=cii" | python3 -c "
 import sys, json
 d = json.load(sys.stdin)['job']
 p = d.get('progress', {})

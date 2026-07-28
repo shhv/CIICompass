@@ -11,7 +11,7 @@ Run ALL of these checks before starting anything:
 
 ```bash
 # Is the backend already up?
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/health
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8001/health
 # Is the frontend already up?
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:5173/
 # .env present?
@@ -67,14 +67,14 @@ cd backend
 python3 -m venv .venv 2>/dev/null   # no-op if exists
 source .venv/bin/activate
 pip install -e . >/dev/null         # no-op if up to date
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8001
 ```
 
 Run uvicorn in the background (e.g. tmux / a background bash task) so the
 session can keep going. Verify with:
 
 ```bash
-curl -s http://localhost:8000/health
+curl -s http://localhost:8001/health
 ```
 
 **Gotcha:** `get_settings()` is `lru_cache`'d. If you edit `backend/.env`,
@@ -85,15 +85,15 @@ touch any Python file or restart uvicorn — `--reload` watches `.py`, not `.env
 ```bash
 cd frontend
 npm install     # no-op if up to date
-npm run dev     # http://localhost:5173, proxies /api → :8000
+npm run dev     # http://localhost:5173, proxies /api → :8001
 ```
 
 ## Verify
 
 ```bash
-curl -s -o /dev/null -w "backend: %{http_code}\n"  http://localhost:8000/health
+curl -s -o /dev/null -w "backend: %{http_code}\n"  http://localhost:8001/health
 curl -s -o /dev/null -w "frontend: %{http_code}\n" http://localhost:5173/
-curl -s http://localhost:8000/api/status | python3 -c "
+curl -s http://localhost:8001/api/status | python3 -c "
 import sys, json
 d = json.load(sys.stdin)
 print(f'index: {d[\"pages\"]} pages, {d[\"collection_size\"]} chunks')
