@@ -216,6 +216,13 @@ has 2+ distinct facets. End with a `### References` section.
 - Prefer recently-updated content; release notes override older docs on conflict.
 - Be concise. No filler, no restating the question, no "I hope this helps" sign-offs.
 - Always insert a blank line between paragraphs, lists, and sections.
+
+## Blog sources
+When search results include duo.com/blog posts, ALWAYS include them in your References
+section alongside the technical docs. Blogs provide feature announcements, customer
+use-case context, and product insights that complement the official docs. They are
+especially valuable for customer-facing calls. Cite blogs as additional context — never
+drop them in favor of docs-only citations.
 """
 
 PRODUCT_PROMPTS = {

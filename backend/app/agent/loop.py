@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 MAX_ITERATIONS = 12
 MAX_TOKENS = 4096
+MAX_CONVO_CHARS = 150_000  # rough char budget to stay under 200k token limit
 
 
 def _cached_system(product: str = "cii") -> list[dict[str, Any]]:
@@ -33,6 +34,15 @@ def _cached_tools() -> list[dict[str, Any]]:
     tools = [dict(t) for t in TOOLS]
     tools[-1] = {**tools[-1], "cache_control": {"type": "ephemeral"}}
     return tools
+
+
+def _trim_convo(convo: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Drop oldest message pairs when conversation exceeds char budget."""
+    total = sum(len(json.dumps(m)) for m in convo)
+    while total > MAX_CONVO_CHARS and len(convo) > 2:
+        dropped = convo.pop(0)
+        total -= len(json.dumps(dropped))
+    return convo
 
 
 async def run_agent(
@@ -66,6 +76,7 @@ async def run_agent(
     yield {"type": "model", "name": model, "reason": route_reason}
 
     for iteration in range(MAX_ITERATIONS):
+        _trim_convo(convo)
         # Escalate to the heavy model if a light-routed turn is still doing tool work.
         if (
             not escalated

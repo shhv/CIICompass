@@ -207,7 +207,13 @@ async def _extract_main(
         for el in soup.find_all(sel):
             el.decompose()
 
-    main = soup.find("main") or soup.find("article") or soup.body or soup
+    main = (
+        soup.find(class_="slds-rich-text-editor__output")
+        or soup.find("main")
+        or soup.find("article")
+        or soup.body
+        or soup
+    )
     # Strip layout chrome only WITHIN main
     for sel in ["nav", "footer", "header", "aside"]:
         for el in main.find_all(sel):
