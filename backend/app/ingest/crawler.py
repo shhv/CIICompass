@@ -97,26 +97,26 @@ async def discover_urls(client: httpx.AsyncClient, base_url: str) -> list[str]:
         urljoin(base_url.rstrip("/") + "/", "sitemap.xml"),
         urljoin(base_url.rstrip("/") + "/", "s/sitemap.xml"),
     ]
+    all_urls: list[str] = []
     for sitemap_url in sitemap_candidates:
         try:
             r = await client.get(sitemap_url, timeout=20.0)
             if r.status_code == 200 and ("<urlset" in r.text or "<sitemapindex" in r.text):
                 entries = _parse_sitemap(r.text, base_url)
-                urls: list[str] = []
                 for entry in entries:
                     if entry.endswith(".xml"):
                         try:
                             sub = await client.get(entry, timeout=20.0)
                             if sub.status_code == 200:
-                                urls.extend(_parse_sitemap(sub.text, base_url))
+                                all_urls.extend(_parse_sitemap(sub.text, base_url))
                         except Exception as e:
                             logger.warning("sub-sitemap fetch %s failed: %s", entry, e)
                     else:
-                        urls.append(entry)
-                if urls:
-                    return urls
+                        all_urls.append(entry)
         except Exception as e:
             logger.warning("sitemap fetch %s failed: %s", sitemap_url, e)
+    if all_urls:
+        return all_urls
     return await _link_crawl(client, base_url)
 
 
@@ -139,7 +139,7 @@ def _parse_sitemap(xml_text: str, base_url: str) -> list[str]:
     return urls
 
 
-async def _link_crawl(client: httpx.AsyncClient, base_url: str, max_pages: int = 500) -> list[str]:
+async def _link_crawl(client: httpx.AsyncClient, base_url: str, max_pages: int = 2000) -> list[str]:
     seen: set[str] = set()
     queue: list[str] = [base_url]
     out: list[str] = []
@@ -242,7 +242,14 @@ async def _fetch_js_rendered(url: str, browser) -> str | None:
     try:
         page = await browser.new_page()
         await page.goto(url, wait_until="domcontentloaded", timeout=30000)
-        await page.wait_for_timeout(3000)
+        try:
+            await page.wait_for_selector(
+                ".slds-rich-text-editor__output, article, main [class*='body']",
+                timeout=15000,
+            )
+        except Exception:
+            # Selector didn't appear — page may have a JS error or different structure
+            await page.wait_for_timeout(3000)
         html = await page.content()
         await page.close()
         return html
@@ -355,6 +362,14 @@ async def crawl_all(base_url: str | None = None) -> list[FetchedPage]:
     try:
         async with httpx.AsyncClient(headers=headers, follow_redirects=True) as client:
             urls = await discover_urls(client, base)
+
+            seed_file = Path(__file__).resolve().parent.parent.parent / "seed_urls.txt"
+            if seed_file.exists():
+                for line in seed_file.read_text().splitlines():
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        urls.append(line)
+
             urls = sorted(set(u for u in urls if _same_base(u, base)))
             logger.info("discovered %d urls", len(urls))
             from . import progress as _p
