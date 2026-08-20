@@ -36,10 +36,23 @@ def _cached_tools() -> list[dict[str, Any]]:
     return tools
 
 
+def _has_attachments(msg: dict[str, Any]) -> bool:
+    content = msg.get("content")
+    if not isinstance(content, list):
+        return False
+    return any(
+        b.get("type") in ("document", "image")
+        for b in content
+        if isinstance(b, dict)
+    )
+
+
 def _trim_convo(convo: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Drop oldest message pairs when conversation exceeds char budget."""
     total = sum(len(json.dumps(m)) for m in convo)
     while total > MAX_CONVO_CHARS and len(convo) > 2:
+        if _has_attachments(convo[0]):
+            break
         dropped = convo.pop(0)
         total -= len(json.dumps(dropped))
     return convo
