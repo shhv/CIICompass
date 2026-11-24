@@ -100,6 +100,7 @@ async def run_full_pipeline(force: bool = False, product: str = "cii") -> dict[s
     from .github_crawler import crawl_all_github_repos, discover_github_repos_from_pages
 
     cfg = get_product(product)
+    progress.use_product(product)
     progress.reset()
     progress.set_phase("discovering")
 

@@ -60,12 +60,12 @@ async def _run_job(force: bool, product: str) -> None:
         state.status = "done"
     except asyncio.TimeoutError:
         logger.warning("ingest exceeded %ss timeout", timeout)
-        ingest_progress.set_phase("error")
+        ingest_progress.get_progress(product).phase = "error"
         state.error = f"timed out after {timeout}s"
         state.status = "error"
     except Exception as e:
         logger.exception("ingest failed")
-        ingest_progress.set_phase("error")
+        ingest_progress.get_progress(product).phase = "error"
         state.error = str(e)
         state.status = "error"
     finally:
@@ -127,7 +127,7 @@ async def status(product: str = "cii") -> dict[str, Any]:
             "finished_at": state.finished_at,
             "result": state.result,
             "error": state.error,
-            "progress": ingest_progress.get_progress().snapshot(),
+            "progress": ingest_progress.get_progress(product).snapshot(),
         },
     }
 
