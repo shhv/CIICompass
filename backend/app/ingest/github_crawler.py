@@ -95,12 +95,13 @@ async def _fetch_repo_tree(
     owner: str,
     repo: str,
     branch: str = "main",
-) -> list[GitTreeEntry]:
+) -> tuple[list[GitTreeEntry], str]:
     url = f"{GITHUB_API}/repos/{owner}/{repo}/git/trees/{branch}?recursive=1"
     r = await client.get(url, timeout=30.0)
     if r.status_code == 404:
         # Try "master" as fallback
-        url = f"{GITHUB_API}/repos/{owner}/{repo}/git/trees/master?recursive=1"
+        branch = "master"
+        url = f"{GITHUB_API}/repos/{owner}/{repo}/git/trees/{branch}?recursive=1"
         r = await client.get(url, timeout=30.0)
     r.raise_for_status()
     data = r.json()
@@ -112,7 +113,7 @@ async def _fetch_repo_tree(
                 sha=item["sha"],
                 size=item.get("size", 0),
             ))
-    return entries
+    return entries, branch
 
 
 async def _fetch_file_content(
@@ -143,21 +144,27 @@ async def crawl_github_repo(owner: str, repo: str) -> list[FetchedPage]:
 
     async with httpx.AsyncClient(headers=headers, follow_redirects=True) as client:
         try:
-            entries = await _fetch_repo_tree(client, owner, repo)
+            entries, branch = await _fetch_repo_tree(client, owner, repo)
         except httpx.HTTPStatusError as e:
             logger.error("failed to fetch tree for %s/%s: %s", owner, repo, e)
             _p.bump_failed(f"github tree: {e.response.status_code}")
+            return []
+        except httpx.TransportError as e:
+            # DNS/connect/timeout errors: skip this repo rather than abort the whole ingest
+            logger.error("failed to fetch tree for %s/%s: %r", owner, repo, e)
+            _p.bump_failed(f"github tree: {e!r}")
             return []
 
         indexable = [e for e in entries if _is_text_indexable(e.path, e.size)]
         logger.info("github %s/%s: %d files total, %d indexable", owner, repo, len(entries), len(indexable))
 
-        # Determine default branch (whichever succeeded in _fetch_repo_tree)
-        branch = "main"
-
         async def _fetch_one(entry: GitTreeEntry) -> FetchedPage | None:
             async with sem:
-                raw = await _fetch_file_content(client, owner, repo, entry.path, branch)
+                try:
+                    raw = await _fetch_file_content(client, owner, repo, entry.path, branch)
+                except httpx.TransportError as e:
+                    logger.warning("github fetch %s/%s:%s failed: %r", owner, repo, entry.path, e)
+                    raw = None
             if raw is None:
                 _p.bump_failed(f"github fetch: {entry.path}")
                 return None

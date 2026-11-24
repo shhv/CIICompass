@@ -6,7 +6,7 @@ import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import urljoin, urlparse
+from urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 from xml.etree import ElementTree as ET
 
 import httpx
@@ -38,6 +38,37 @@ def url_hash(url: str) -> str:
 
 def content_hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+_NOISE_QUERY_PARAMS = {"language", "lang"}
+_NOISE_QUERY_PREFIXES = ("utm_",)
+
+
+def normalize_url(url: str) -> str:
+    """Canonicalize a URL for dedup: drop the fragment and locale/tracking params.
+
+    help.duo.com serves each article at both /s/article/N and
+    /s/article/N?language=en_US; without this they index as two separate pages.
+    """
+    u = urlparse(url)
+    kept = [
+        (k, v)
+        for k, v in parse_qsl(u.query, keep_blank_values=True)
+        if k.lower() not in _NOISE_QUERY_PARAMS
+        and not k.lower().startswith(_NOISE_QUERY_PREFIXES)
+    ]
+    return urlunparse(u._replace(query=urlencode(kept), fragment=""))
+
+
+def _dedupe(urls: list[str]) -> list[str]:
+    """Order-preserving dedup; sitemap candidates can list the same page twice."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for u in urls:
+        if u not in seen:
+            seen.add(u)
+            out.append(u)
+    return out
 
 
 def _same_base(url: str, base: str) -> bool:
@@ -116,7 +147,7 @@ async def discover_urls(client: httpx.AsyncClient, base_url: str) -> list[str]:
         except Exception as e:
             logger.warning("sitemap fetch %s failed: %s", sitemap_url, e)
     if all_urls:
-        return all_urls
+        return _dedupe(all_urls)
     return await _link_crawl(client, base_url)
 
 
@@ -135,13 +166,13 @@ def _parse_sitemap(xml_text: str, base_url: str) -> list[str]:
     else:
         for loc in root.findall(".//sm:url/sm:loc", SITEMAP_NS):
             if loc.text and same_host(loc.text.strip(), base_url):
-                urls.append(loc.text.strip())
+                urls.append(normalize_url(loc.text.strip()))
     return urls
 
 
 async def _link_crawl(client: httpx.AsyncClient, base_url: str, max_pages: int = 2000) -> list[str]:
     seen: set[str] = set()
-    queue: list[str] = [base_url]
+    queue: list[str] = [normalize_url(base_url)]
     out: list[str] = []
     sem = asyncio.Semaphore(10)
 
@@ -158,13 +189,13 @@ async def _link_crawl(client: httpx.AsyncClient, base_url: str, max_pages: int =
             soup = BeautifulSoup(r.text, "lxml")
             found: list[str] = []
             for a in soup.find_all("a", href=True):
-                href = urljoin(url, a["href"]).split("#", 1)[0]
+                href = normalize_url(urljoin(url, a["href"]))
                 if _same_base(href, base_url) and href not in seen:
                     seen.add(href)
                     found.append(href)
             return found
 
-    seen.add(base_url)
+    seen.add(normalize_url(base_url))
     while queue and len(out) < max_pages:
         batch = queue[:20]
         queue = queue[20:]

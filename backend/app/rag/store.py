@@ -74,8 +74,18 @@ class ChromaStore:
         return chunks
 
     def all_metadatas(self) -> list[dict[str, Any]]:
-        res = self.collection.get(include=["metadatas"])
-        return res.get("metadatas", []) or []
+        # Page through the collection: a single unbounded get() exceeds
+        # SQLite's variable limit once the collection is large.
+        metas: list[dict[str, Any]] = []
+        batch = 5000
+        offset = 0
+        while True:
+            res = self.collection.get(include=["metadatas"], limit=batch, offset=offset)
+            page = res.get("metadatas", []) or []
+            metas.extend(page)
+            if len(page) < batch:
+                return metas
+            offset += batch
 
     def all_documents(self, limit: int | None = None) -> tuple[list[str], list[str], list[dict[str, Any]]]:
         res = self.collection.get(include=["documents", "metadatas"], limit=limit)
