@@ -14,6 +14,9 @@ class ProductConfig:
     base_urls: list[str]
     allowed_domains: list[str]
     github_repos: list[str] = field(default_factory=list)
+    # Other products' collections this product also searches at query time.
+    # Ingest still writes only to `collection_name`.
+    extra_collections: list[str] = field(default_factory=list)
 
 
 PRODUCTS: dict[str, ProductConfig] = {
@@ -29,7 +32,9 @@ PRODUCTS: dict[str, ProductConfig] = {
         display_name="Duo",
         collection_name="duo_docs",
         base_urls=["https://duo.com/docs", "https://duo.com/blog", "https://help.duo.com"],
-        allowed_domains=["duo.com", "help.duo.com"],
+        allowed_domains=["duo.com", "help.duo.com", "docs.oort.io"],
+        # CII docs now live under Duo — answer CII questions from the Duo assistant too.
+        extra_collections=["cii_docs"],
     ),
 }
 

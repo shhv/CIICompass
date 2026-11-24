@@ -18,7 +18,8 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "search_docs",
         "description": (
-            "Search the indexed CII documentation (docs.oort.io) and GitHub repos. Returns the top "
+            "Search the indexed product documentation (Duo docs, help.duo.com, Duo blog, "
+            "CII docs at docs.oort.io) and GitHub repos. Returns the top "
             "matching chunks with title, URL, snippet, and category. Use this first "
             "for any factual or how-to question."
         ),
@@ -51,13 +52,14 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "fetch_page",
         "description": (
-            "Fetch the full markdown content of a specific docs.oort.io page by URL. "
+            "Fetch the full markdown content of a specific docs page by URL "
+            "(duo.com, help.duo.com, or docs.oort.io). "
             "Use when search snippets are insufficient and you need the full page."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "url": {"type": "string", "description": "Full https://docs.oort.io/... URL."}
+                "url": {"type": "string", "description": "Full https:// URL of a docs page returned by search."}
             },
             "required": ["url"],
         },
@@ -98,8 +100,10 @@ class ToolExecutor:
     def __init__(self, product: str = "cii") -> None:
         self.product_cfg = get_product(product)
         store = ChromaStore(collection_name=self.product_cfg.collection_name)
-        self.retriever = HybridRetriever(store=store)
+        extra = [ChromaStore(collection_name=c) for c in self.product_cfg.extra_collections]
+        self.retriever = HybridRetriever(store=store, extra_stores=extra)
         self.store = store
+        self.all_stores = [store, *extra]
 
     async def run(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         if name == "search_docs":
@@ -162,7 +166,7 @@ class ToolExecutor:
         return {"url": url, "title": title, "markdown": text}
 
     async def _list_sections(self, category: str | None = None, limit: int = 50) -> dict[str, Any]:
-        metas = self.store.all_metadatas()
+        metas = [m for s in self.all_stores for m in s.all_metadatas()]
         seen: dict[str, dict[str, Any]] = {}
         for m in metas:
             if not m:

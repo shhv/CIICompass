@@ -33,9 +33,16 @@ class RetrievedChunk:
 class HybridRetriever:
     """Vector retrieval from Chroma + BM25 rerank over the candidate pool."""
 
-    def __init__(self, store: ChromaStore | None = None, embedder: VoyageEmbedder | None = None):
+    def __init__(
+        self,
+        store: ChromaStore | None = None,
+        embedder: VoyageEmbedder | None = None,
+        extra_stores: list[ChromaStore] | None = None,
+    ):
         self.store = store or ChromaStore()
         self.embedder = embedder or VoyageEmbedder()
+        # All collections are pooled before BM25 so scores stay comparable.
+        self.stores = [self.store, *(extra_stores or [])]
 
     def search(
         self,
@@ -46,7 +53,12 @@ class HybridRetriever:
     ) -> list[RetrievedChunk]:
         where = {"category": category} if category else None
         q_emb = self.embedder.embed_query(query)
-        candidates: list[StoredChunk] = self.store.query(q_emb, k=candidate_k, where=where)
+        candidates: list[StoredChunk] = []
+        for s in self.stores:
+            try:
+                candidates.extend(s.query(q_emb, k=candidate_k, where=where))
+            except Exception:
+                logger.warning("query failed on collection %s", s.collection.name, exc_info=True)
         if not candidates:
             return []
 
