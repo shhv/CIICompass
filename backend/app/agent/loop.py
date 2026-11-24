@@ -13,6 +13,49 @@ from .tools import TOOLS, ToolExecutor
 
 logger = logging.getLogger(__name__)
 
+GROUNDING_PROMPT = """You are a grounding verifier. Given retrieved documentation excerpts and an assistant's answer, identify any factual claims in the answer that are NOT supported by the provided excerpts.
+
+<retrieved_docs>
+{chunks}
+</retrieved_docs>
+
+<assistant_answer>
+{answer}
+</assistant_answer>
+
+List each ungrounded claim as a short sentence describing what was claimed and that it lacks doc support. If every claim is supported, return an empty JSON array.
+
+Respond with ONLY a JSON array of strings, e.g. ["claim 1 is not in docs", "claim 2 is not in docs"] or []."""
+
+
+async def _verify_grounding(
+    answer: str,
+    chunks: list[str],
+    client: AsyncAnthropic,
+    model: str,
+) -> list[str]:
+    if not answer.strip() or not chunks:
+        return []
+    try:
+        resp = await client.messages.create(
+            model=model,
+            max_tokens=1024,
+            messages=[
+                {
+                    "role": "user",
+                    "content": GROUNDING_PROMPT.format(
+                        chunks="\n---\n".join(chunks),
+                        answer=answer,
+                    ),
+                }
+            ],
+        )
+        text = resp.content[0].text.strip()
+        return json.loads(text)
+    except Exception:
+        logger.debug("grounding verification failed", exc_info=True)
+        return []
+
 MAX_ITERATIONS = 12
 MAX_TOKENS = 4096
 MAX_CONVO_CHARS = 150_000  # rough char budget to stay under 200k token limit
@@ -80,6 +123,7 @@ async def run_agent(
     executor = ToolExecutor(product=product)
     convo: list[dict[str, Any]] = list(messages)
     cited_urls: set[str] = set()
+    retrieved_chunks: list[str] = []
 
     model, route_reason = choose_model(messages, settings)
     # Duo index is newer and less structured — always use the heavier model.
@@ -141,6 +185,13 @@ async def run_agent(
         convo.append({"role": "assistant", "content": assistant_blocks})
 
         if final.stop_reason != "tool_use" or not tool_uses:
+            answer_text = " ".join(
+                b.get("text", "") for b in assistant_blocks if b.get("type") == "text"
+            )
+            warnings = await _verify_grounding(
+                answer_text, retrieved_chunks, client, settings.light_model
+            )
+            yield {"type": "grounding", "warnings": warnings}
             yield {"type": "done"}
             return
 
@@ -161,6 +212,9 @@ async def run_agent(
                 confidence = result.get("confidence", "high")
                 yield {"type": "confidence", "level": confidence, "score": result.get("top_score", 0)}
                 for r in result.get("results", []):
+                    snippet = r.get("snippet", "")
+                    if snippet:
+                        retrieved_chunks.append(snippet)
                     u = r.get("url")
                     if u and u not in cited_urls:
                         cited_urls.add(u)
